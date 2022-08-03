@@ -36,20 +36,19 @@ async function main() {
 
   await showVeziPlayLogo();
 
-  cmd.backColor = 0;
-  cmd.foreColor = 10;
+  cmd.setColor(10);
 
   do // 1 loop = 1 maze
   {
     let exitMaze = 0;
 
-    cmd.setCursor(35, 11);
+    cmd.gotoxy(35, 11);
     cmd.write('++++++++++');
-    cmd.setCursor(34, 12);
+    cmd.gotoxy(34, 12);
     cmd.write('++LEVEL ' + `${mazeLevel}`.padStart(2) + '++');
-    cmd.setCursor(35, 13);
+    cmd.gotoxy(35, 13);
     cmd.write('++++++++++');
-    cmd.setCursor(24, 22);
+    cmd.gotoxy(24, 22);
 
     await cmd.pause();
     cmd.clear();
@@ -61,10 +60,10 @@ async function main() {
     generateMaze();
     generatePoints();
 
-    cmd.foreColor = 11;
+    cmd.setColor(11);
     // display the maze
     cmd.writeLine('     USE THE ARROW KEYS TO NAVIGATE THE MAZE. YOU ARE THE ' + String.fromCharCode(2) + ', GET TO THE X!');
-    cmd.foreColor = 10;
+    cmd.setColor(10);
 
     for (let r = 0; r < mazeHeight; r++) {
       cmd.write(' ');
@@ -72,13 +71,13 @@ async function main() {
         if (MAZE[r][c] !== 36 && MAZE[r][c] !== 15) {
           cmd.writeCode(MAZE[r][c]);
         } else if (MAZE[r][c] === 36) {
-          cmd.foreColor = 12;
+          cmd.setColor(12);
           cmd.writeCode(MAZE[r][c]);
-          cmd.foreColor = 10;
+          cmd.setColor(10);
         } else {
-          cmd.foreColor = 14;
+          cmd.setColor(14);
           cmd.writeCode(MAZE[r][c]);
-          cmd.foreColor = 10;
+          cmd.setColor(10);
         }
       }
       cmd.writeLine();
@@ -88,7 +87,7 @@ async function main() {
 
     xMaze = 0;
     yMaze = entrance*2+1;
-    cmd.setCursor(xMaze+1, yMaze+1);
+    cmd.gotoxy(xMaze+1, yMaze+1);
 
     // loop movements until player reaches exit (exitMaze = true)
     while (exitMaze === 0) {
@@ -97,24 +96,24 @@ async function main() {
 
       if (exitMaze === 2) {
         cmd.clear();
-        cmd.setCursor(32, 11);
+        cmd.gotoxy(32, 11);
         cmd.write('Final Score: ' + mazeScore);
-        cmd.setCursor(31, 13);
+        cmd.gotoxy(31, 13);
         cmd.write('Thanks for playing!');
-        cmd.setCursor(24, 22);
+        cmd.gotoxy(24, 22);
         await cmd.pause();
 
         return 0;
       }
     }
 
-    cmd.setCursor(35, 11);
+    cmd.gotoxy(35, 11);
     cmd.write('++++++++++');
-    cmd.setCursor(34, 12);
+    cmd.gotoxy(34, 12);
     cmd.write('++YOU WIN!++');
-    cmd.setCursor(35, 13);
+    cmd.gotoxy(35, 13);
     cmd.write('++++++++++');
-    cmd.setCursor(24, 22);
+    cmd.gotoxy(24, 22);
     await cmd.pause();
     cmd.clear();
 
@@ -123,17 +122,17 @@ async function main() {
 
       showScore();
 
-      cmd.setCursor(31, 10);
+      cmd.gotoxy(31, 10);
       cmd.write('++++++++++++++++++');
-      cmd.setCursor(30, 11);
+      cmd.gotoxy(30, 11);
       cmd.write('++ALL POINTS CLEAR!++');
-      cmd.setCursor(31, 12);
+      cmd.gotoxy(31, 12);
       cmd.write('++++++++++++++++++');
-      cmd.setCursor(30, 13);
+      cmd.gotoxy(30, 13);
       cmd.write('++  BONUS: +' + `${mazeLevel}`.padStart(2) + '000  ++');
-      cmd.setCursor(31, 14);
+      cmd.gotoxy(31, 14);
       cmd.write('++++++++++++++++++');
-      cmd.setCursor(24, 22);
+      cmd.gotoxy(24, 22);
       await cmd.pause();
       cmd.clear();
     }
@@ -143,17 +142,17 @@ async function main() {
 
       showScore();
 
-      cmd.setCursor(31, 10);
+      cmd.gotoxy(31, 10);
       cmd.write('++++++++++++++++++');
-      cmd.setCursor(30, 11);
+      cmd.gotoxy(30, 11);
       cmd.write('++ALL BOOSTS CLEAR!++');
-      cmd.setCursor(31, 12);
+      cmd.gotoxy(31, 12);
       cmd.write('++++++++++++++++++');
-      cmd.setCursor(30, 13);
+      cmd.gotoxy(30, 13);
       cmd.write('++  BONUS:  +' + `${mazeLevel}`.padStart(2) + '00  ++');
-      cmd.setCursor(31, 14);
+      cmd.gotoxy(31, 14);
       cmd.write('++++++++++++++++++');
-      cmd.setCursor(24, 22);
+      cmd.gotoxy(24, 22);
       await cmd.pause();
       cmd.clear();
     }
@@ -162,33 +161,33 @@ async function main() {
 
   } while (mazeLevel < 39); // until level 38 complete
 
-  cmd.setCursor(29, 10);
+  cmd.gotoxy(29, 10);
   cmd.write('++++++++++++++++++++++');
-  cmd.setCursor(28, 11);
+  cmd.gotoxy(28, 11);
   cmd.write('++  CONGRATULATIONS!!  ++');
-  cmd.setCursor(29, 12);
+  cmd.gotoxy(29, 12);
   cmd.write('++++++++++++++++++++++');
-  cmd.setCursor(28, 13);
+  cmd.gotoxy(28, 13);
   cmd.write('++FINAL SCORE: ' + `${mazeScore}`.padEnd(8) + '++');
-  cmd.setCursor(29, 14);
+  cmd.gotoxy(29, 14);
   cmd.write('++++++++++++++++++++++');
-  cmd.setCursor(24, 22);
+  cmd.gotoxy(24, 22);
   await cmd.pause();
 
   return 0;
 }
 
 function showScore() {
-  cmd.setCursor(72, 24);
+  cmd.gotoxy(72, 24);
   cmd.write('       ');
-  cmd.setCursor(65, 24);
+  cmd.gotoxy(65, 24);
   cmd.write('Score: ' + mazeScore);
 }
 
 function showBoost() {
-  cmd.setCursor(52, 24);
+  cmd.gotoxy(52, 24);
   cmd.write('    ');
-  cmd.setCursor(45, 24);
+  cmd.gotoxy(45, 24);
   cmd.write('BOOST: ' + boost);
 }
 
@@ -248,22 +247,22 @@ async function move() {
 
   switch (newColor) {
     case 0:
-      cmd.foreColor = 12;
+      cmd.setColor(12);
       break;
     case 1:
-      cmd.foreColor = 14;
+      cmd.setColor(14);
       break;
     case 2:
-      cmd.foreColor = 10;
+      cmd.setColor(10);
       break;
     case 3:
-      cmd.foreColor = 11;
+      cmd.setColor(11);
       break;
     case 4:
-      cmd.foreColor = 3;
+      cmd.setColor(3);
       break;
     case 5:
-      cmd.foreColor = 13;
+      cmd.setColor(13);
       break;
   }
 
@@ -271,7 +270,7 @@ async function move() {
   if (MAZE[yMazeNew][xMazeNew] === ' '.charCodeAt(0)) {
     if (xBoost === xMaze && yBoost === yMaze) { // NOT a boost move
       // leave trail of dots
-      cmd.setCursor(xMaze+1, yMaze+1);
+      cmd.gotoxy(xMaze+1, yMaze+1);
       cmd.writeCode(43);
 
       // mark location in maze as visited
@@ -281,7 +280,7 @@ async function move() {
       xMaze = xMazeNew;
       yMaze = yMazeNew;
 
-      cmd.setCursor(xMaze+1, yMaze+1); // account for offset maze position
+      cmd.gotoxy(xMaze+1, yMaze+1); // account for offset maze position
 
       // output new cursor
       cmd.writeCode(1);
@@ -290,9 +289,9 @@ async function move() {
       mazeScore--; // -1 point per move
     } else { // a boost move to open space (already know it's not a move into a wall)
       // leave trail of dots
-      cmd.setCursor(xMaze+1, yMaze+1);
+      cmd.gotoxy(xMaze+1, yMaze+1);
       cmd.writeCode(43);
-      cmd.setCursor(xBoost+1, yBoost+1);
+      cmd.gotoxy(xBoost+1, yBoost+1);
       cmd.writeCode(43);
 
       // mark location in maze as visited
@@ -303,7 +302,7 @@ async function move() {
       xMaze = xMazeNew;
       yMaze = yMazeNew;
 
-      cmd.setCursor(xMaze+1, yMaze+1); // account for offset maze position
+      cmd.gotoxy(xMaze+1, yMaze+1); // account for offset maze position
 
       // output new cursor
       cmd.writeCode(1);
@@ -313,7 +312,7 @@ async function move() {
   } else if (MAZE[yMazeNew][xMazeNew] === 43) { // if square is visited
     if (xBoost === xMaze && yBoost === yMaze) { // NOT a boost move
       // overwrite trail of dots
-      cmd.setCursor(xMaze+1, yMaze+1);
+      cmd.gotoxy(xMaze+1, yMaze+1);
       cmd.write(' ');
 
       // set new position of cursor
@@ -323,7 +322,7 @@ async function move() {
       // mark location in maze as un-visited
       MAZE[yMaze][xMaze] = ' '.charCodeAt(0);
 
-      cmd.setCursor(xMaze+1, yMaze+1); // account for offset maze position
+      cmd.gotoxy(xMaze+1, yMaze+1); // account for offset maze position
 
       // output new cursor
       cmd.writeCode(1);
@@ -332,9 +331,9 @@ async function move() {
       mazeScore--; // -1 point per move
     } else { // a boost move to visited space
       // overwrite trail of dots
-      cmd.setCursor(xMaze+1, yMaze+1);
+      cmd.gotoxy(xMaze+1, yMaze+1);
       cmd.write(' ');
-      cmd.setCursor(xBoost+1, yBoost+1);
+      cmd.gotoxy(xBoost+1, yBoost+1);
       cmd.write(' ');
 
       // set new position of cursor
@@ -345,7 +344,7 @@ async function move() {
       MAZE[yMaze][xMaze] = ' '.charCodeAt(0);
       MAZE[yBoost][xBoost] = ' '.charCodeAt(0);
 
-      cmd.setCursor(xMaze+1, yMaze+1); // account for offset maze position
+      cmd.gotoxy(xMaze+1, yMaze+1); // account for offset maze position
 
       // output new cursor
       cmd.writeCode(1);
@@ -359,7 +358,7 @@ async function move() {
 
     if (xBoost === xMaze && yBoost === yMaze) { // NOT a boost move
       // leave trail of dots
-      cmd.setCursor(xMaze+1, yMaze+1);
+      cmd.gotoxy(xMaze+1, yMaze+1);
       cmd.writeCode(43);
 
       // mark location in maze as visited
@@ -369,7 +368,7 @@ async function move() {
       xMaze = xMazeNew;
       yMaze = yMazeNew;
 
-      cmd.setCursor(xMaze+1, yMaze+1); // account for offset maze position
+      cmd.gotoxy(xMaze+1, yMaze+1); // account for offset maze position
 
       // output new cursor
       cmd.writeCode(1);
@@ -378,9 +377,9 @@ async function move() {
       mazeScore += 100; // 100 points per dollar
     } else { // a boost move to a dollar
       // leave trail of dots
-      cmd.setCursor(xMaze+1, yMaze+1);
+      cmd.gotoxy(xMaze+1, yMaze+1);
       cmd.writeCode(43);
-      cmd.setCursor(xBoost+1, yBoost+1);
+      cmd.gotoxy(xBoost+1, yBoost+1);
       cmd.writeCode(43);
 
       // mark location in maze as visited
@@ -391,7 +390,7 @@ async function move() {
       xMaze = xMazeNew;
       yMaze = yMazeNew;
 
-      cmd.setCursor(xMaze+1, yMaze+1); // account for offset maze position
+      cmd.gotoxy(xMaze+1, yMaze+1); // account for offset maze position
 
       // output new cursor
       cmd.writeCode(1);
@@ -406,7 +405,7 @@ async function move() {
 
     if (xBoost === xMaze && yBoost === yMaze) { // NOT a boost move
       // leave trail of dots
-      cmd.setCursor(xMaze+1, yMaze+1);
+      cmd.gotoxy(xMaze+1, yMaze+1);
       cmd.writeCode(43);
 
       // mark location in maze as visited
@@ -416,7 +415,7 @@ async function move() {
       xMaze = xMazeNew;
       yMaze = yMazeNew;
 
-      cmd.setCursor(xMaze+1, yMaze+1); // account for offset maze position
+      cmd.gotoxy(xMaze+1, yMaze+1); // account for offset maze position
 
       // output new cursor
       cmd.writeCode(1);
@@ -425,9 +424,9 @@ async function move() {
       boost += 11; // 10 moves per boost ( decremented at end of move(); )
     } else { // a boost move to another booster
       // leave trail of dots
-      cmd.setCursor(xMaze+1, yMaze+1);
+      cmd.gotoxy(xMaze+1, yMaze+1);
       cmd.writeCode(43);
-      cmd.setCursor(xBoost+1, yBoost+1);
+      cmd.gotoxy(xBoost+1, yBoost+1);
       cmd.writeCode(43);
 
       // mark location in maze as visited
@@ -438,7 +437,7 @@ async function move() {
       xMaze = xMazeNew;
       yMaze = yMazeNew;
 
-      cmd.setCursor(xMaze+1, yMaze+1); // account for offset maze position
+      cmd.gotoxy(xMaze+1, yMaze+1); // account for offset maze position
 
       // output new cursor
       cmd.writeCode(1);
@@ -454,7 +453,7 @@ async function move() {
     boost--;
     showBoost();
   } else {
-    cmd.setCursor(45, 24);
+    cmd.gotoxy(45, 24);
     cmd.write('            ');
   }
 
@@ -646,14 +645,14 @@ async function showVeziPlayLogo() {
   await sleep(100); cmd.systemColor('78');
 
   veziPlayLogo.forEach((row, i) => {
-    cmd.setCursor(20, i + 2);
+    cmd.gotoxy(20, i + 2);
     cmd.write(row);
   });
 
   await sleep(100); cmd.systemColor('82');
   await sleep(100); cmd.systemColor('2A');
 
-  cmd.setCursor(24, veziPlayLogo.length + 3);
+  cmd.gotoxy(24, veziPlayLogo.length + 3);
   await sleep(500); cmd.write('V   ');
   await sleep(100); cmd.write('E   ');
   await sleep(100); cmd.write('Z   ');

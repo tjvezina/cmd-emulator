@@ -247,11 +247,16 @@ class Cmd {
     }
   }
 
-  setCursor(x, y) {
+  gotoxy(x, y) {
     this.cursor = {
       x: constrain(x, 0, this.gridSize.width-1),
       y: constrain(y, 0, this.gridSize.height-1),
     };
+  }
+
+  setColor(colorCode) {
+    this.backColor = floor(colorCode / 16);
+    this.foreColor = colorCode % 16;
   }
 
   write(msg) {
