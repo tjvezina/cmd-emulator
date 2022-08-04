@@ -24,7 +24,7 @@ function setup() {
   createCanvas(windowWidth, windowHeight);
   pixelDensity(1);
 
-  cmdEmulator = new CmdEmulator({ main, title: 'Hedge Maze - Vezi-Play', exeName: 'Hedge Maze' });
+  cmdEmulator = new CmdEmulator({ main, exeName: 'Hedge Mazes' });
 }
 
 function draw() {
@@ -33,6 +33,8 @@ function draw() {
 
 async function main() {
   cmd.resize(80, 25);
+
+  cmd.setConsoleTitle('Hedge Maze - Vezi-Play');
 
   await showVeziPlayLogo();
 

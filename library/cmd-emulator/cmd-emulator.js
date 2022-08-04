@@ -47,15 +47,16 @@ class CmdEmulator {
   }
 
   main;
-  title = 'Command Prompt Emulator';
-  exeName;
+  exeName = 'cmd.exe';
 
   wasDoubleClicked = false;
 
-  constructor({ main, title, exeName }) {
+  constructor({ main, exeName }) {
     this.main = main;
-    this.title = (title ?? this.title);
-    this.exeName = (exeName ?? this.title) + '.exe';
+    this.exeName = exeName ?? this.exeName;
+    if (!this.exeName.endsWith('.exe')) {
+      this.exeName += '.exe';
+    }
 
     wrapP5Events(this, 'doubleClicked', 'keyPressed');
   }
@@ -65,7 +66,7 @@ class CmdEmulator {
     const { exeName } = this;
 
     clear();
-    this.#drawBackground();
+    this.drawBackground();
 
     if (cmd !== undefined) {
       cmd.draw();
@@ -118,7 +119,7 @@ class CmdEmulator {
     text(exeName, (width + totalWidth) / 2, height/2 - 3);
 
     if (this.wasDoubleClicked && isMouseInRect) {
-      this.#execute();
+      this.execute();
     }
 
     this.wasDoubleClicked = false;
@@ -134,7 +135,7 @@ class CmdEmulator {
     cmd?.keyPressed();
   }
 
-  #drawBackground() {
+  drawBackground() {
     const { desktopBackground } = CmdEmulator;
 
     const canvasAR = width/height;
@@ -157,8 +158,8 @@ class CmdEmulator {
     pop();
   }
 
-  async #execute() {
-    cmd = new Cmd(this.title);
+  async execute() {
+    cmd = new Cmd();
 
     await this.main(cmd);
 
@@ -207,7 +208,7 @@ class Cmd {
     });
   }
 
-  title;
+  title = 'C:\\Windows\\system32\\cmd.exe';
 
   gridSize = { width: 80, height: 25 };
   pixelSize = { width: 0, height: 0 };
@@ -224,10 +225,8 @@ class Cmd {
 
   wasKeyPressed = false;
 
-  constructor(title) {
-    this.title = title;
-
-    this.onResize();
+  constructor() {
+    this.onResized();
   }
 
   remove() {
@@ -242,6 +241,11 @@ class Cmd {
 
   keyPressed() {
     this.wasKeyPressed = true;
+  }
+
+  setConsoleTitle(title) {
+    this.title = title;
+    this.drawTitle();
   }
 
   gotoxy(x, y) {
@@ -350,46 +354,63 @@ class Cmd {
   resize(width, height) {
     if (width !== this.gridSize.width || height !== this.gridSize.height) {
       this.gridSize = { width, height };
-      this.onResize();
+      this.onResized();
     }
   }
 
-  onResize() {
+  onResized() {
     const { gridSize, pixelSize } = this;
-    const { tl, t, tr, l, r, bl, b, br } = Cmd.frameParts;
+    const { t, l, r, b } = Cmd.frameParts;
 
     pixelSize.width = gridSize.width * Cmd.charWidth;
     pixelSize.height = gridSize.height * Cmd.charHeight;
 
-    const cmdWidth = pixelSize.width + l.width + r.width;
-    const cmdHeight = pixelSize.height + t.height + b.height;
-
     this.graphics?.remove();
-    this.graphics = createGraphics(cmdWidth, cmdHeight);
+    this.graphics = createGraphics(pixelSize.width + l.width + r.width, pixelSize.height + t.height + b.height);
+    this.graphics.clear();
+    this.graphics.noStroke();
 
     this.contentBuffer?.remove();
-    this.contentBuffer = createGraphics(this.pixelSize.width, this.pixelSize.height);
+    this.contentBuffer = createGraphics(pixelSize.width, pixelSize.height);
+    this.contentBuffer.clear();
+    this.contentBuffer.noStroke();
 
-    const { graphics, contentBuffer } = this;
-    const { appIcon, systemFont } = CmdEmulator;
+    this.drawFrame();
 
-    graphics.clear();
-    graphics.noStroke();
+    this.drawTitle();
 
-    contentBuffer.clear();
-    contentBuffer.noStroke();
+    this.clear();
+  }
+
+  drawFrame() {
+    const { graphics } = this;
+    const { tl, t, tr, l, r, bl, b, br } = Cmd.frameParts;
+
+    graphics.resetMatrix();
 
     graphics.image(tl, 0, 0);
-    graphics.image(t, tl.width, 0, cmdWidth-tl.width-tr.width, t.height);
-    graphics.image(tr, cmdWidth-tr.width, 0);
+    graphics.image(t, tl.width, 0, graphics.width - tl.width - tr.width, t.height);
+    graphics.image(tr, graphics.width - tr.width, 0);
 
-    graphics.image(l, 0, tl.height, l.width, cmdHeight-tl.height-bl.height);
-    graphics.image(r, cmdWidth-r.width, tr.height, r.width, cmdHeight-tr.height-br.height);
+    graphics.image(l, 0, tl.height, l.width, graphics.height - tl.height - bl.height);
+    graphics.image(r, graphics.width - r.width, tr.height, r.width, graphics.height - tr.height - br.height);
 
-    graphics.image(bl, 0, cmdHeight-bl.height);
-    graphics.image(b, bl.width, cmdHeight-b.height, cmdWidth-bl.width-br.width, b.height);
-    graphics.image(br, cmdWidth-br.width, cmdHeight-br.height);
+    graphics.image(bl, 0, graphics.height - bl.height);
+    graphics.image(b, bl.width, graphics.height - b.height, graphics.width - bl.width - br.width, b.height);
+    graphics.image(br, graphics.width - br.width, graphics.height - br.height);
 
+    graphics.translate(l.width, t.height);
+  }
+
+  drawTitle() {
+    const { graphics, title } = this;
+    const { tl, t, tr, l } = Cmd.frameParts;
+    const { appIcon, systemFont } = CmdEmulator;
+
+    graphics.resetMatrix();
+
+    graphics.image(t, tl.width, 0, graphics.width-tl.width-tr.width, t.height);
+    
     graphics.image(appIcon, l.width, t.height/2 - 7, 16, 16 / (appIcon.width/appIcon.height));
 
     const titleX = l.width + 24;
@@ -402,19 +423,15 @@ class Cmd {
       graphics.textAlign(LEFT, CENTER);
       graphics.textSize(12);
       graphics.noFill();
-      graphics.strokeWeight(8); graphics.stroke('#FFFFFF08'); graphics.text(this.title, titleX, titleY);
-      graphics.strokeWeight(6); graphics.stroke('#FFFFFF18'); graphics.text(this.title, titleX, titleY);
-      graphics.strokeWeight(4); graphics.stroke('#FFFFFF28'); graphics.text(this.title, titleX, titleY);
-      graphics.strokeWeight(2); graphics.stroke('#FFFFFF38'); graphics.text(this.title, titleX, titleY);
+      graphics.strokeWeight(8); graphics.stroke('#FFFFFF08'); graphics.text(title, titleX, titleY);
+      graphics.strokeWeight(6); graphics.stroke('#FFFFFF18'); graphics.text(title, titleX, titleY);
+      graphics.strokeWeight(4); graphics.stroke('#FFFFFF28'); graphics.text(title, titleX, titleY);
+      graphics.strokeWeight(2); graphics.stroke('#FFFFFF38'); graphics.text(title, titleX, titleY);
       graphics.noStroke();
-      graphics.fill(0); graphics.text(this.title, titleX, titleY);
+      graphics.fill(0); graphics.text(title, titleX, titleY);
     }
     graphics.pop();
 
     graphics.translate(l.width, t.height);
-
-    this.foreColor = Color.Gray;
-    this.backColor = Color.Black;
-    this.clear();
   }
 }
