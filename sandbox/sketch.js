@@ -24,7 +24,7 @@ async function main() {
     const start = millis();
     while (millis() - start < 1000/60) {
       cmd.foreColor = 1 + floor(random(15));
-      cmd.writeCode(floor(random(256)));
+      cmd.writeChar(floor(random(256)));
       counts[iter]++;
     }
     await sleep(0);

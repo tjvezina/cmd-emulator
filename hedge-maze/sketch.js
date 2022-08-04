@@ -69,14 +69,14 @@ async function main() {
       cmd.write(' ');
       for (let c = 0; c < mazeWidth; c++) {
         if (MAZE[r][c] !== 36 && MAZE[r][c] !== 15) {
-          cmd.writeCode(MAZE[r][c]);
+          cmd.writeChar(MAZE[r][c]);
         } else if (MAZE[r][c] === 36) {
           cmd.setColor(12);
-          cmd.writeCode(MAZE[r][c]);
+          cmd.writeChar(MAZE[r][c]);
           cmd.setColor(10);
         } else {
           cmd.setColor(14);
-          cmd.writeCode(MAZE[r][c]);
+          cmd.writeChar(MAZE[r][c]);
           cmd.setColor(10);
         }
       }
@@ -271,7 +271,7 @@ async function move() {
     if (xBoost === xMaze && yBoost === yMaze) { // NOT a boost move
       // leave trail of dots
       cmd.gotoxy(xMaze+1, yMaze+1);
-      cmd.writeCode(43);
+      cmd.writeChar(43);
 
       // mark location in maze as visited
       MAZE[yMaze][xMaze] = 43;
@@ -283,16 +283,16 @@ async function move() {
       cmd.gotoxy(xMaze+1, yMaze+1); // account for offset maze position
 
       // output new cursor
-      cmd.writeCode(1);
+      cmd.writeChar(1);
 
       moveCounter++; // moving forward
       mazeScore--; // -1 point per move
     } else { // a boost move to open space (already know it's not a move into a wall)
       // leave trail of dots
       cmd.gotoxy(xMaze+1, yMaze+1);
-      cmd.writeCode(43);
+      cmd.writeChar(43);
       cmd.gotoxy(xBoost+1, yBoost+1);
-      cmd.writeCode(43);
+      cmd.writeChar(43);
 
       // mark location in maze as visited
       MAZE[yMaze][xMaze] = 43;
@@ -305,7 +305,7 @@ async function move() {
       cmd.gotoxy(xMaze+1, yMaze+1); // account for offset maze position
 
       // output new cursor
-      cmd.writeCode(1);
+      cmd.writeChar(1);
 
       moveCounter += 2; // moving forward
     }
@@ -325,7 +325,7 @@ async function move() {
       cmd.gotoxy(xMaze+1, yMaze+1); // account for offset maze position
 
       // output new cursor
-      cmd.writeCode(1);
+      cmd.writeChar(1);
 
       moveCounter--; // back-tracking
       mazeScore--; // -1 point per move
@@ -347,7 +347,7 @@ async function move() {
       cmd.gotoxy(xMaze+1, yMaze+1); // account for offset maze position
 
       // output new cursor
-      cmd.writeCode(1);
+      cmd.writeChar(1);
 
       moveCounter -= 2; // back-tracking
     }
@@ -359,7 +359,7 @@ async function move() {
     if (xBoost === xMaze && yBoost === yMaze) { // NOT a boost move
       // leave trail of dots
       cmd.gotoxy(xMaze+1, yMaze+1);
-      cmd.writeCode(43);
+      cmd.writeChar(43);
 
       // mark location in maze as visited
       MAZE[yMaze][xMaze] = 43;
@@ -371,16 +371,16 @@ async function move() {
       cmd.gotoxy(xMaze+1, yMaze+1); // account for offset maze position
 
       // output new cursor
-      cmd.writeCode(1);
+      cmd.writeChar(1);
 
       moveCounter++; // moving forward
       mazeScore += 100; // 100 points per dollar
     } else { // a boost move to a dollar
       // leave trail of dots
       cmd.gotoxy(xMaze+1, yMaze+1);
-      cmd.writeCode(43);
+      cmd.writeChar(43);
       cmd.gotoxy(xBoost+1, yBoost+1);
-      cmd.writeCode(43);
+      cmd.writeChar(43);
 
       // mark location in maze as visited
       MAZE[yMaze][xMaze] = 43;
@@ -393,7 +393,7 @@ async function move() {
       cmd.gotoxy(xMaze+1, yMaze+1); // account for offset maze position
 
       // output new cursor
-      cmd.writeCode(1);
+      cmd.writeChar(1);
 
       moveCounter += 2; // moving forward
       mazeScore += 200; // 200 points per dollar with boost
@@ -406,7 +406,7 @@ async function move() {
     if (xBoost === xMaze && yBoost === yMaze) { // NOT a boost move
       // leave trail of dots
       cmd.gotoxy(xMaze+1, yMaze+1);
-      cmd.writeCode(43);
+      cmd.writeChar(43);
 
       // mark location in maze as visited
       MAZE[yMaze][xMaze] = 43;
@@ -418,16 +418,16 @@ async function move() {
       cmd.gotoxy(xMaze+1, yMaze+1); // account for offset maze position
 
       // output new cursor
-      cmd.writeCode(1);
+      cmd.writeChar(1);
 
       moveCounter++; // moving forward
       boost += 11; // 10 moves per boost ( decremented at end of move(); )
     } else { // a boost move to another booster
       // leave trail of dots
       cmd.gotoxy(xMaze+1, yMaze+1);
-      cmd.writeCode(43);
+      cmd.writeChar(43);
       cmd.gotoxy(xBoost+1, yBoost+1);
-      cmd.writeCode(43);
+      cmd.writeChar(43);
 
       // mark location in maze as visited
       MAZE[yMaze][xMaze] = 43;
@@ -440,7 +440,7 @@ async function move() {
       cmd.gotoxy(xMaze+1, yMaze+1); // account for offset maze position
 
       // output new cursor
-      cmd.writeCode(1);
+      cmd.writeChar(1);
 
       moveCounter += 2; // moving forward
       boost += 11; // 10 moves per boost ( decremented at end of move(); )

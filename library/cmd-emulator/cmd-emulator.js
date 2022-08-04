@@ -227,7 +227,7 @@ class Cmd {
   constructor(title) {
     this.title = title;
 
-    this.#onResize();
+    this.onResize();
   }
 
   remove() {
@@ -240,11 +240,8 @@ class Cmd {
     image(graphics, round((width - graphics.width) / 2), round((height - graphics.height) / 2));
   }
 
-  resize(width, height) {
-    if (width !== this.gridSize.width || height !== this.gridSize.height) {
-      this.gridSize = { width, height };
-      this.#onResize();
-    }
+  keyPressed() {
+    this.wasKeyPressed = true;
   }
 
   gotoxy(x, y) {
@@ -254,71 +251,15 @@ class Cmd {
     };
   }
 
-  setColor(colorCode) {
-    this.backColor = floor(colorCode / 16);
-    this.foreColor = colorCode % 16;
-  }
-
-  write(msg) {
-    [...(msg ?? '')].forEach(c => this.writeCode(c.charCodeAt(0)));
-  }
-
-  writeLine(msg) {
-    this.write(msg);
-    this.#newline();
-  }
-
-  // Redraws the console all in one color (equivalent to C++ stdlib system("color XX") function)
-  systemColor(colorCode) {
-    [this.backColor, this.foreColor] = [...colorCode.padStart(2, '0')].map(i => parseInt(i, 16));
-
-    const { graphics } = this;
-
-    this.clear({ clearBuffer: false });
-
-    graphics.tint(ColorValues[this.foreColor]);
-    graphics.image(this.contentBuffer, 0, 0);
-    graphics.noTint();
-  }
-
-  writeCode(code) {
-    if (isNaN(Number(code) || code < 0 || code >= 256)) throw new Error('Invalid ascii code ' + code)
-
-    const { graphics, contentBuffer } = this;
-    const { asciiFontMap, asciiFontColorMap, charWidth, charHeight } = Cmd;
-
-    const dx = this.cursor.x*charWidth;
-    const dy = this.cursor.y*charHeight;
-    
-    graphics.fill(ColorValues[this.backColor]);
-    graphics.rect(dx, dy, charWidth, charHeight);
-
-    // Skip font rendering for empty characters
-    if (![0, 32].includes(code)) {
-      const cx = (this.foreColor % 4) * asciiFontMap.width;
-      const cy = floor(this.foreColor / 4) * asciiFontMap.height;
-  
-      const sx = (code % 16) * (asciiFontMap.width/16);
-      const sy = floor(code / 16) * (asciiFontMap.height/16);
-
-      graphics.image(asciiFontColorMap, dx, dy, charWidth, charHeight, sx+cx, sy+cy, charWidth, charHeight);
-
-      contentBuffer.image(asciiFontMap, dx, dy, charWidth, charHeight, sx, sy, charWidth, charHeight);
+  advanceCursor() {
+    if (++this.cursor.x >= this.gridSize.width) {
+      this.newline();
     }
-
-    this.#advanceCursor();
   }
 
-  clear({ clearBuffer = true } = {}) {
-    const { graphics, pixelSize } = this;
-
-    if (clearBuffer === true) {
-      this.contentBuffer.clear();
-      this.cursor = { x: 0, y: 0 };
-    }
-
-    graphics.fill(ColorValues[this.backColor]);
-    graphics.rect(0, 0, pixelSize.width, pixelSize.height);
+  newline() {
+    this.cursor.x = 0;
+    this.cursor.y = min(this.cursor.y + 1, this.gridSize.height - 1);
   }
 
   async getChar() {
@@ -331,28 +272,89 @@ class Cmd {
     return keyCode;
   }
 
-  // Writes a message and waits for user input to continue
   async pause() {
     this.write('Press any key to continue . . . ');
     await this.getChar();
   }
 
-  keyPressed() {
-    this.wasKeyPressed = true;
+  setColor(colorCode) {
+    this.backColor = floor(colorCode / 16);
+    this.foreColor = colorCode % 16;
   }
 
-  #advanceCursor() {
-    if (++this.cursor.x >= this.gridSize.width) {
-      this.#newline();
+  // Redraws the console all in one color (equivalent to C++ stdlib system("color XX") function)
+  systemColor(colorCode) {
+    const { graphics } = this;
+
+    [this.backColor, this.foreColor] = [...colorCode.padStart(2, '0')].map(i => parseInt(i, 16));
+
+    this.fill();
+
+    graphics.tint(ColorValues[this.foreColor]);
+    graphics.image(this.contentBuffer, 0, 0);
+    graphics.noTint();
+  }
+
+  fill() {
+    const { graphics, pixelSize } = this;
+
+    graphics.fill(ColorValues[this.backColor]);
+    graphics.rect(0, 0, pixelSize.width, pixelSize.height);
+  }
+
+  clear() {
+    this.cursor = { x: 0, y: 0 };
+    
+    this.fill();
+    this.contentBuffer.clear();
+  }
+
+  write(msg) {
+    [...(msg ?? '')].forEach(c => this.writeChar(c.charCodeAt(0)));
+  }
+
+  writeLine(msg) {
+    this.write(msg);
+    this.newline();
+  }
+
+  writeChar(char) {
+    if (isNaN(Number(char) || char < 0 || char >= 256)) throw new Error('Invalid ascii code ' + char)
+
+    const { graphics, contentBuffer } = this;
+    const { asciiFontMap, asciiFontColorMap, charWidth, charHeight } = Cmd;
+
+    const dx = this.cursor.x*charWidth;
+    const dy = this.cursor.y*charHeight;
+    
+    graphics.fill(ColorValues[this.backColor]);
+    graphics.rect(dx, dy, charWidth, charHeight);
+
+    contentBuffer.erase();
+    contentBuffer.rect(dx, dy, charWidth, charHeight);
+    contentBuffer.noErase();
+
+    const cx = (this.foreColor % 4) * asciiFontMap.width;
+    const cy = floor(this.foreColor / 4) * asciiFontMap.height;
+
+    const sx = (char % 16) * (asciiFontMap.width/16);
+    const sy = floor(char / 16) * (asciiFontMap.height/16);
+
+    graphics.image(asciiFontColorMap, dx, dy, charWidth, charHeight, sx+cx, sy+cy, charWidth, charHeight);
+
+    contentBuffer.image(asciiFontMap, dx, dy, charWidth, charHeight, sx, sy, charWidth, charHeight);
+
+    this.advanceCursor();
+  }
+
+  resize(width, height) {
+    if (width !== this.gridSize.width || height !== this.gridSize.height) {
+      this.gridSize = { width, height };
+      this.onResize();
     }
   }
 
-  #newline() {
-    this.cursor.x = 0;
-    this.cursor.y = min(this.cursor.y + 1, this.gridSize.height - 1);
-  }
-
-  #onResize() {
+  onResize() {
     const { gridSize, pixelSize } = this;
     const { tl, t, tr, l, r, bl, b, br } = Cmd.frameParts;
 
@@ -367,12 +369,15 @@ class Cmd {
 
     this.contentBuffer?.remove();
     this.contentBuffer = createGraphics(this.pixelSize.width, this.pixelSize.height);
-    this.contentBuffer.clear();
 
-    const { graphics } = this;
+    const { graphics, contentBuffer } = this;
     const { appIcon, systemFont } = CmdEmulator;
 
     graphics.clear();
+    graphics.noStroke();
+
+    contentBuffer.clear();
+    contentBuffer.noStroke();
 
     graphics.image(tl, 0, 0);
     graphics.image(t, tl.width, 0, cmdWidth-tl.width-tr.width, t.height);
@@ -390,17 +395,21 @@ class Cmd {
     const titleX = l.width + 24;
     const titleY = t.height/2 - 2;
 
-    graphics.noStroke();
-    graphics.textFont(systemFont);
-    graphics.textAlign(LEFT, CENTER);
-    graphics.textSize(12);
-    graphics.noFill();
-    graphics.strokeWeight(8); graphics.stroke('#FFFFFF08'); graphics.text(this.title, titleX, titleY);
-    graphics.strokeWeight(6); graphics.stroke('#FFFFFF18'); graphics.text(this.title, titleX, titleY);
-    graphics.strokeWeight(4); graphics.stroke('#FFFFFF28'); graphics.text(this.title, titleX, titleY);
-    graphics.strokeWeight(2); graphics.stroke('#FFFFFF38'); graphics.text(this.title, titleX, titleY);
-    graphics.noStroke();
-    graphics.fill(0); graphics.text(this.title, titleX, titleY);
+    graphics.push();
+    {
+      graphics.noStroke();
+      graphics.textFont(systemFont);
+      graphics.textAlign(LEFT, CENTER);
+      graphics.textSize(12);
+      graphics.noFill();
+      graphics.strokeWeight(8); graphics.stroke('#FFFFFF08'); graphics.text(this.title, titleX, titleY);
+      graphics.strokeWeight(6); graphics.stroke('#FFFFFF18'); graphics.text(this.title, titleX, titleY);
+      graphics.strokeWeight(4); graphics.stroke('#FFFFFF28'); graphics.text(this.title, titleX, titleY);
+      graphics.strokeWeight(2); graphics.stroke('#FFFFFF38'); graphics.text(this.title, titleX, titleY);
+      graphics.noStroke();
+      graphics.fill(0); graphics.text(this.title, titleX, titleY);
+    }
+    graphics.pop();
 
     graphics.translate(l.width, t.height);
 
