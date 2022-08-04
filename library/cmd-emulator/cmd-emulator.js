@@ -250,8 +250,8 @@ class Cmd {
 
   gotoxy(x, y) {
     this.cursor = {
-      x: constrain(x, 0, this.gridSize.width-1),
-      y: constrain(y, 0, this.gridSize.height-1),
+      x: constrain(round(x), 0, this.gridSize.width-1),
+      y: constrain(round(y), 0, this.gridSize.height-1),
     };
   }
 

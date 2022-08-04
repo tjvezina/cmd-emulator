@@ -335,9 +335,9 @@ async function showDepthLines(lines, n, d) {
       cmd.setColor(11);
     }
 
-    cmd.gotoxy(c, (lines-c)*n/d);
+    cmd.gotoxy(c, floor((lines-c)*n/d));
     cmd.write('o');
-    cmd.gotoxy(80 - c, (lines-c)*n/d);
+    cmd.gotoxy(80 - c, floor((lines-c)*n/d));
     cmd.write('o');
 
     await sleep(10);
