@@ -14,7 +14,7 @@ const mazeWidth = (CTotal * 2) + 1;
 const mazeHeight = (RTotal * 2) + 1;
 
 // the maze
-const MAZE = new Array(mazeHeight).fill().map(_ => new Array(mazeWidth).fill(' '.charCodeAt(0)));
+const MAZE = new Array(mazeHeight).fill().map(_ => new Array(mazeWidth).fill(toCode(' ')));
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
@@ -51,7 +51,6 @@ async function main() {
     cmd.gotoxy(35, 13);
     cmd.write('++++++++++');
     cmd.gotoxy(24, 22);
-
     await cmd.pause();
     cmd.clear();
     
@@ -64,7 +63,7 @@ async function main() {
 
     cmd.setColor(11);
     // display the maze
-    cmd.writeLine('     USE THE ARROW KEYS TO NAVIGATE THE MAZE. YOU ARE THE ' + String.fromCharCode(2) + ', GET TO THE X!');
+    cmd.write('     USE THE ARROW KEYS TO NAVIGATE THE MAZE. YOU ARE THE ' + toChar(2) + ', GET TO THE X!').endl();
     cmd.setColor(10);
 
     for (let r = 0; r < mazeHeight; r++) {
@@ -82,7 +81,7 @@ async function main() {
           cmd.setColor(10);
         }
       }
-      cmd.writeLine();
+      cmd.endl();
     }
 
     showScore();
@@ -269,7 +268,7 @@ async function move() {
   }
 
   // if the attempted move leads to an open space, make the move
-  if (MAZE[yMazeNew][xMazeNew] === ' '.charCodeAt(0)) {
+  if (MAZE[yMazeNew][xMazeNew] === toCode(' ')) {
     if (xBoost === xMaze && yBoost === yMaze) { // NOT a boost move
       // leave trail of dots
       cmd.gotoxy(xMaze+1, yMaze+1);
@@ -322,7 +321,7 @@ async function move() {
       yMaze = yMazeNew;
       
       // mark location in maze as un-visited
-      MAZE[yMaze][xMaze] = ' '.charCodeAt(0);
+      MAZE[yMaze][xMaze] = toCode(' ');
 
       cmd.gotoxy(xMaze+1, yMaze+1); // account for offset maze position
 
@@ -343,8 +342,8 @@ async function move() {
       yMaze = yMazeNew;
 
       // mark location in maze as un-visited
-      MAZE[yMaze][xMaze] = ' '.charCodeAt(0);
-      MAZE[yBoost][xBoost] = ' '.charCodeAt(0);
+      MAZE[yMaze][xMaze] = toCode(' ');
+      MAZE[yBoost][xBoost] = toCode(' ');
 
       cmd.gotoxy(xMaze+1, yMaze+1); // account for offset maze position
 
@@ -356,7 +355,7 @@ async function move() {
   } else if (MAZE[yMazeNew][xMazeNew] === 36) { // if square is a dollar
     pointClear--; // remove 1 point from screen
 
-    MAZE[yMazeNew][xMazeNew] = ' '.charCodeAt(0)
+    MAZE[yMazeNew][xMazeNew] = toCode(' ');
 
     if (xBoost === xMaze && yBoost === yMaze) { // NOT a boost move
       // leave trail of dots
@@ -403,7 +402,7 @@ async function move() {
   } else if (MAZE[yMazeNew][xMazeNew] === 15) { // if square is a booster
     boostClear--; // remove 1 boost from screen
 
-    MAZE[yMazeNew][xMazeNew] = ' '.charCodeAt(0);
+    MAZE[yMazeNew][xMazeNew] = toCode(' ');
 
     if (xBoost === xMaze && yBoost === yMaze) { // NOT a boost move
       // leave trail of dots
@@ -447,7 +446,7 @@ async function move() {
       moveCounter += 2; // moving forward
       boost += 11; // 10 moves per boost ( decremented at end of move(); )
     }
-  } else if (MAZE[yMazeNew][xMazeNew] === 'X'.charCodeAt(0) || MAZE[yBoost][xBoost] === 'X'.charCodeAt(0)) {
+  } else if (MAZE[yMazeNew][xMazeNew] === toCode('X') || MAZE[yBoost][xBoost] === toCode('X')) {
     return 1;
   }
 
@@ -467,7 +466,7 @@ function generateMaze() {
   // reset MAZE to blank (new maze)
   for (let r = 0; r < mazeHeight; r++) {
     for (let c = 0; c < mazeWidth; c++) {
-      MAZE[r][c] = ' '.charCodeAt(0);
+      MAZE[r][c] = toCode(' ');
     }
   }
 
@@ -496,7 +495,7 @@ function generateMaze() {
   entrance = floor(random(RTotal));
   mazeExit = floor(random(RTotal));
   MAZE[entrance*2+1][0] = 1; // entrance
-  MAZE[mazeExit*2+1][mazeWidth-1] = 'X'.charCodeAt(0); // exit
+  MAZE[mazeExit*2+1][mazeWidth-1] = toCode('X'); // exit
   yMaze = entrance*2+1; // initialize starting position
 
   let wallCounter = 0, currentWall = 0, randomWall = 0, currentRow = 0, currentCol = 0;
@@ -560,7 +559,7 @@ function generateMaze() {
         currentCol = (((currentWall - wallVTotal) % CTotal) * 2) + 1;
       }
 
-      MAZE[currentRow][currentCol] = ' '.charCodeAt(0);
+      MAZE[currentRow][currentCol] = toCode(' ');
 
       // add all cells in cell 2's set to cell 1's set (join the sets)
       for (let counter = 0; counter < cellTotal; counter++) {
@@ -592,7 +591,7 @@ function generatePoints() {
     xCoord = (xPoint * 2) + 2;
     yCoord = (yPoint * 2) + 2;
 
-    if (MAZE[yCoord - 1][xCoord - 1] === ' '.charCodeAt(0)) { // make sure the space is empty (no dollar or boost)
+    if (MAZE[yCoord - 1][xCoord - 1] === toCode(' ')) { // make sure the space is empty (no dollar or boost)
       MAZE[yCoord - 1][xCoord - 1] = 36;
       pointClear++; // 1 more point on screen
     } else {
@@ -609,7 +608,7 @@ function generatePoints() {
     xCoord = (xPoint * 2) + 2;
     yCoord = (yPoint * 2) + 2;
 
-    if (MAZE[yCoord - 1][xCoord - 1] === ' '.charCodeAt(0)) { // make sure the space is empty (no dollar or boost)
+    if (MAZE[yCoord - 1][xCoord - 1] === toCode(' ')) { // make sure the space is empty (no dollar or boost)
       MAZE[yCoord - 1][xCoord - 1] = 15;
       boostClear++; // 1 more boost on screen
     } else {
@@ -619,6 +618,7 @@ function generatePoints() {
 }
 
 async function showVeziPlayLogo() {
+	/* ---\/--- VEZI-PLAY LOGO START ---\/--- */
   const veziPlayLogo = [
     " ..................     ............... ",
     "..::::::::::::::::..   ..:::::::::::::..",
@@ -643,31 +643,47 @@ async function showVeziPlayLogo() {
 
   cmd.resize(80, 25);
 
-  await sleep(1000); cmd.systemColor('F7');
-  await sleep(100); cmd.systemColor('78');
-
-  veziPlayLogo.forEach((row, i) => {
-    cmd.gotoxy(20, i + 2);
-    cmd.write(row);
-  });
-
-  await sleep(100); cmd.systemColor('82');
-  await sleep(100); cmd.systemColor('2A');
-
-  cmd.gotoxy(24, veziPlayLogo.length + 3);
-  await sleep(500); cmd.write('V   ');
-  await sleep(100); cmd.write('E   ');
-  await sleep(100); cmd.write('Z   ');
-  await sleep(100); cmd.write('I   ');
-  await sleep(100); cmd.write('-   ');
-  await sleep(100); cmd.write('P   ');
-  await sleep(100); cmd.write('L   ');
-  await sleep(100); cmd.write('A   ');
-  await sleep(100); cmd.write('Y');
-
-  await sleep(3000); cmd.systemColor('3A');
-  await sleep(100); cmd.systemColor('1A');
-  await sleep(100); cmd.systemColor('02');
-  await sleep(100); cmd.clear();
-  await sleep(1000); cmd.systemColor('07');
+  cmd.endl().endl();
+  await sleep(1000);
+  cmd.systemColor('F7');
+  await sleep(100);
+  cmd.systemColor('78');
+  for (let row = 0; row < veziPlayLogo.length; row++) {
+    cmd.write('                    ');
+    cmd.write(veziPlayLogo[row]).endl();
+  };
+  cmd.endl().write('                        ');
+  await sleep(100);
+  cmd.systemColor('82');
+  await sleep(100);
+  cmd.systemColor('2A');
+  await sleep(500);
+  cmd.write('V   ');
+  await sleep(100);
+  cmd.write('E   ');
+  await sleep(100);
+  cmd.write('Z   ');
+  await sleep(100);
+  cmd.write('I   ');
+  await sleep(100);
+  cmd.write('-   ');
+  await sleep(100);
+  cmd.write('P   ');
+  await sleep(100);
+  cmd.write('L   ');
+  await sleep(100);
+  cmd.write('A   ');
+  await sleep(100);
+  cmd.write('Y');
+  await sleep(3000);
+  cmd.systemColor('3A');
+  await sleep(100);
+  cmd.systemColor('1A');
+  await sleep(100);
+  cmd.systemColor('2');
+  await sleep(100);
+  cmd.clear();
+  cmd.systemColor('7');
+  await sleep(1000);
+	/* ---/\--- VEZI-PLAY LOGO END ---/\--- */
 }

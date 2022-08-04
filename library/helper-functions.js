@@ -13,3 +13,6 @@ function wrapP5Events(target, ...events) {
     }
   });
 }
+
+function toChar(code) { return String.fromCharCode(code); }
+function toCode(char) { return char.charCodeAt(0); }

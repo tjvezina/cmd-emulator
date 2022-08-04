@@ -257,13 +257,8 @@ class Cmd {
 
   advanceCursor() {
     if (++this.cursor.x >= this.gridSize.width) {
-      this.newline();
+      this.endl();
     }
-  }
-
-  newline() {
-    this.cursor.x = 0;
-    this.cursor.y = min(this.cursor.y + 1, this.gridSize.height - 1);
   }
 
   async getChar() {
@@ -288,42 +283,41 @@ class Cmd {
 
   // Redraws the console all in one color (equivalent to C++ stdlib system("color XX") function)
   systemColor(colorCode) {
-    const { graphics } = this;
+    const { graphics, pixelSize } = this;
 
     [this.backColor, this.foreColor] = [...colorCode.padStart(2, '0')].map(i => parseInt(i, 16));
 
-    this.fill();
+    graphics.fill(ColorValues[this.backColor]);
+    graphics.rect(0, 0, pixelSize.width, pixelSize.height);
 
     graphics.tint(ColorValues[this.foreColor]);
     graphics.image(this.contentBuffer, 0, 0);
     graphics.noTint();
   }
 
-  fill() {
+  clear() {
     const { graphics, pixelSize } = this;
-
+    
     graphics.fill(ColorValues[this.backColor]);
     graphics.rect(0, 0, pixelSize.width, pixelSize.height);
+    
+    this.contentBuffer.clear();
+    this.cursor = { x: 0, y: 0 };
   }
 
-  clear() {
-    this.cursor = { x: 0, y: 0 };
-    
-    this.fill();
-    this.contentBuffer.clear();
+  endl() {
+    this.cursor.x = 0;
+    this.cursor.y = min(this.cursor.y + 1, this.gridSize.height - 1);
+    return this;
   }
 
   write(msg) {
-    [...(msg ?? '')].forEach(c => this.writeChar(c.charCodeAt(0)));
+    [...(msg ?? '')].forEach(c => this.writeChar(toCode(c)));
+    return this;
   }
 
-  writeLine(msg) {
-    this.write(msg);
-    this.newline();
-  }
-
-  writeChar(char) {
-    if (isNaN(Number(char) || char < 0 || char >= 256)) throw new Error('Invalid ascii code ' + char)
+  writeChar(code) {
+    if (isNaN(Number(code) || code < 0 || code >= 256)) throw new Error('Invalid ascii code ' + code)
 
     const { graphics, contentBuffer } = this;
     const { asciiFontMap, asciiFontColorMap, charWidth, charHeight } = Cmd;
@@ -341,17 +335,21 @@ class Cmd {
     const cx = (this.foreColor % 4) * asciiFontMap.width;
     const cy = floor(this.foreColor / 4) * asciiFontMap.height;
 
-    const sx = (char % 16) * (asciiFontMap.width/16);
-    const sy = floor(char / 16) * (asciiFontMap.height/16);
+    const sx = (code % 16) * (asciiFontMap.width/16);
+    const sy = floor(code / 16) * (asciiFontMap.height/16);
 
     graphics.image(asciiFontColorMap, dx, dy, charWidth, charHeight, sx+cx, sy+cy, charWidth, charHeight);
 
     contentBuffer.image(asciiFontMap, dx, dy, charWidth, charHeight, sx, sy, charWidth, charHeight);
 
     this.advanceCursor();
+
+    return this;
   }
 
   resize(width, height) {
+    width ??= this.gridSize.width;
+    height ??= this.gridSize.height;
     if (width !== this.gridSize.width || height !== this.gridSize.height) {
       this.gridSize = { width, height };
       this.onResized();
