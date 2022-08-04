@@ -237,6 +237,17 @@ async function move() {
       return 0; // a different key was pressed
   }
 
+  /*
+    JS PORT NOTE: The original project did not handle index out of bounds issues (ex. boosting through
+    outer-most walls), but this does not cause errors in C++ and execution would continue normally.
+    Here however, we must explicitly handle index range checking to ensure valid moves.
+  */
+  if (xMazeNew < 0 || xMazeNew >= mazeWidth || yMazeNew < 0 || yMazeNew >= mazeHeight) {
+    if (MAZE[yBoost][xBoost] !== toCode('X')) {
+      return 0;
+    }
+  }
+
   // xMazeNew < 0 means player tried to move out of maze on first move
   // MAZE[r][c] = 177 means player tried to move into a wall
   // if it's a boost move, MAZE[yBoost][xBoost] = the space being boosted over
