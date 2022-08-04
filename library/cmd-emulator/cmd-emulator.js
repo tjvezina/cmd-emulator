@@ -261,7 +261,9 @@ class Cmd {
     }
   }
 
-  async getChar() {
+  // Unlike the C function `_getch()` this simply returns JavaScript keycodes
+  // i.e. there is no need to call it twice for function/arrow keys
+  async getch() {
     this.wasKeyPressed = false;
     do {
       await sleep(0);
@@ -273,7 +275,7 @@ class Cmd {
 
   async pause() {
     this.write('Press any key to continue . . . ');
-    await this.getChar();
+    await this.getch();
   }
 
   setColor(colorCode) {

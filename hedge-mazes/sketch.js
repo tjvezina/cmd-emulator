@@ -198,7 +198,7 @@ async function move() {
   let xMazeNew = xMaze, yMazeNew = yMaze;
   let xBoost = xMaze, yBoost = yMaze; // the space being skipped over by a boost move
   
-  arrow = await cmd.getChar();
+  arrow = await cmd.getch();
 
   if (arrow === ESCAPE) {
     return 2;

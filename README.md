@@ -4,3 +4,4 @@ A web-based Windows command prompt emulator (sort of) built with [p5.js](https:/
 
 Ported projects:
 - [Hedge Mazes](https://tjvezina.github.io/cmd-emulator/hedge-mazes/)
+- [Pokerama](https://tjvezina.github.io/cmd-emulator/pokerama/)
