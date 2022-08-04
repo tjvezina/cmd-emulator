@@ -22,7 +22,7 @@ async function main() {
 
   await showVeziPlayLogo();
 
-  cmd.resize(undefined, 32);
+  cmd.setWindowHeight(425);
 
   await playPoker();
 

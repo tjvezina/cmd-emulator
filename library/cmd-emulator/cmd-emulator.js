@@ -349,6 +349,12 @@ class Cmd {
     return this;
   }
 
+  setWindowHeight(height) {
+    const { t, b } = Cmd.frameParts;
+
+    this.resize(undefined, round((height - t.height - b.height) / Cmd.charHeight));
+  }
+
   resize(width, height) {
     width ??= this.gridSize.width;
     height ??= this.gridSize.height;
