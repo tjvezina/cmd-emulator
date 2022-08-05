@@ -20,12 +20,17 @@ class Color {
   static Yellow    = 0xE;
   static White     = 0xF;
 }
-const ColorValues = [
+const COLOR_VALUES = [
   '#000000', '#000080', '#008000', '#008080', '#800000', '#800080', '#808000', '#C0C0C0',
   '#808080', '#0000FF', '#00FF00', '#00FFFF', '#FF0000', '#FF00FF', '#FFFF00', '#FFFFFF',
 ];
 
-const cmdAssetPath = '../library/cmd-emulator/assets';
+const CMD_ASSET_PATH = '/library/cmd-emulator/assets';
+
+const DEFAULT_GRID_WIDTH = 80;
+const DEFAULT_GRID_HEIGHT = 25;
+
+const TAB_WIDTH = 8;
 
 // Make the cmd instance globally accessible
 let cmd;
@@ -40,10 +45,10 @@ class CmdEmulator {
   }
 
   static preload() {
-    loadImage(`${cmdAssetPath}/desktop-background.png`, result => this.desktopBackground = result);
-    loadImage(`${cmdAssetPath}/app-icon.png`, result => this.appIcon = result);
+    loadImage(`${CMD_ASSET_PATH}/desktop-background.png`, result => this.desktopBackground = result);
+    loadImage(`${CMD_ASSET_PATH}/app-icon.png`, result => this.appIcon = result);
     
-    loadFont(`${cmdAssetPath}/Segoe UI.ttf`, result => this.systemFont = result);
+    loadFont(`${CMD_ASSET_PATH}/Segoe UI.ttf`, result => this.systemFont = result);
   }
 
   main;
@@ -181,7 +186,7 @@ class Cmd {
 
   static preload() {
     // Load the ascii font map, a 16x16 character font image
-    loadImage(`${cmdAssetPath}/ascii-font.png`, result => {
+    loadImage(`${CMD_ASSET_PATH}/ascii-font.png`, result => {
       this.asciiFontMap = result;
       this.charWidth = this.asciiFontMap.width/16;
       this.charHeight = this.asciiFontMap.height/16;
@@ -189,7 +194,7 @@ class Cmd {
 
     const framePartNames = ['tl', 't', 'tr', 'l', 'r', 'bl', 'b', 'br'];
     framePartNames.forEach(partName => {
-      loadImage(`${cmdAssetPath}/cmd-frame-${partName}.png`, result => {
+      loadImage(`${CMD_ASSET_PATH}/cmd-frame-${partName}.png`, result => {
         this.frameParts[partName] = result;
       });
     });
@@ -200,7 +205,7 @@ class Cmd {
 
     // tint() performance is so bad, it's better to save each color individually
     this.asciiFontColorMap = createGraphics(asciiFontMap.width*4, asciiFontMap.height*4);
-    ColorValues.forEach((col, i) => {
+    COLOR_VALUES.forEach((col, i) => {
       const x = (i % 4) * asciiFontMap.width;
       const y = floor(i / 4) * asciiFontMap.height;
       this.asciiFontColorMap.tint(col);
@@ -210,7 +215,7 @@ class Cmd {
 
   title = 'C:\\Windows\\system32\\cmd.exe';
 
-  gridSize = { width: 80, height: 25 };
+  gridSize = { width: DEFAULT_GRID_WIDTH, height: DEFAULT_GRID_HEIGHT };
   pixelSize = { width: 0, height: 0 };
 
   cursor = { x: 0, y: 0 };
@@ -274,7 +279,7 @@ class Cmd {
   }
 
   async pause() {
-    this.write('Press any key to continue . . . ');
+    this.cout('Press any key to continue . . . ');
     await this.getch();
   }
 
@@ -289,10 +294,10 @@ class Cmd {
 
     [this.backColor, this.foreColor] = [...colorCode.padStart(2, '0')].map(i => parseInt(i, 16));
 
-    graphics.fill(ColorValues[this.backColor]);
+    graphics.fill(COLOR_VALUES[this.backColor]);
     graphics.rect(0, 0, pixelSize.width, pixelSize.height);
 
-    graphics.tint(ColorValues[this.foreColor]);
+    graphics.tint(COLOR_VALUES[this.foreColor]);
     graphics.image(this.contentBuffer, 0, 0);
     graphics.noTint();
   }
@@ -300,7 +305,7 @@ class Cmd {
   clear() {
     const { graphics, pixelSize } = this;
     
-    graphics.fill(ColorValues[this.backColor]);
+    graphics.fill(COLOR_VALUES[this.backColor]);
     graphics.rect(0, 0, pixelSize.width, pixelSize.height);
     
     this.contentBuffer.clear();
@@ -313,13 +318,25 @@ class Cmd {
     return this;
   }
 
-  write(msg) {
-    [...(msg ?? '')].forEach(c => this.writeChar(toCode(c)));
+  cout(output) {
+    if (typeof output === 'number') {
+      this.printCharCode(output)
+    } else {
+      [...`${output ?? ''}`.replaceAll('\t', ' '.repeat(TAB_WIDTH))].forEach(char => {
+        if (char === '\n') {
+          this.endl();
+        } else {
+          this.printCharCode(toCode(char));
+        }
+      })
+    }
     return this;
   }
 
-  writeChar(code) {
-    if (isNaN(Number(code) || code < 0 || code >= 256)) throw new Error('Invalid ascii code ' + code)
+  printCharCode(code) {
+    if (!Number.isInteger(code) || code < 0 || code >= 256) {
+      throw new Error('Invalid ascii code: ' + code);
+    }
 
     const { graphics, contentBuffer } = this;
     const { asciiFontMap, asciiFontColorMap, charWidth, charHeight } = Cmd;
@@ -327,7 +344,7 @@ class Cmd {
     const dx = this.cursor.x*charWidth;
     const dy = this.cursor.y*charHeight;
     
-    graphics.fill(ColorValues[this.backColor]);
+    graphics.fill(COLOR_VALUES[this.backColor]);
     graphics.rect(dx, dy, charWidth, charHeight);
 
     contentBuffer.erase();
@@ -352,7 +369,11 @@ class Cmd {
   setWindowHeight(height) {
     const { t, b } = Cmd.frameParts;
 
-    this.resize(undefined, round((height - t.height - b.height) / Cmd.charHeight));
+    if (height === 0) {
+      this.resize(undefined, DEFAULT_GRID_HEIGHT);
+    } else {
+      this.resize(undefined, round((height - t.height - b.height) / Cmd.charHeight));
+    }
   }
 
   resize(width, height) {

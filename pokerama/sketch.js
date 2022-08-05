@@ -116,21 +116,21 @@ async function playPoker() {
 
     cmd.gotoxy(35, 24);
     cmd.setColor(14);
-    cmd.write(handRankName[handRank]);
+    cmd.cout(handRankName[handRank]);
 
     if (handRank === 10) {
       cmd.gotoxy(34, 26);
-      cmd.write('(' + pCards[4].toString() + ')');
+      cmd.cout('(' + pCards[4].toString() + ')');
     }
 
     await cmd.getch();
 
     cmd.gotoxy(35, 24);
-    cmd.write('                ');
+    cmd.cout('                ');
 
     if (handRank === 10) {
       cmd.gotoxy(34, 26);
-      cmd.write('                        ');
+      cmd.cout('                        ');
     }
 
     // print face-down cards before dealing the new hand
@@ -147,25 +147,25 @@ async function getHoldCards() {
 
   for (let c = 0; c < 5; c++) {
     cmd.gotoxy((c*14)+11, 23);
-    cmd.write('[ ]');
+    cmd.cout('[ ]');
   }
 
   cmd.gotoxy(40, 25);
-  cmd.writeChar(24);
+  cmd.cout(24);
 
   cmd.gotoxy(11, 26);
   cmd.setColor(10);
-  cmd.write('Use arrow keys and space bar to choose which cards to hold.');
+  cmd.cout('Use arrow keys and space bar to choose which cards to hold.');
   cmd.gotoxy(26, 27);
-  cmd.write('Press enter when you\'re done.');
+  cmd.cout('Press enter when you\'re done.');
   cmd.gotoxy(25, 29);
   await cmd.pause();
   cmd.gotoxy(11, 26);
-  cmd.write('                                                           ');
+  cmd.cout('                                                           ');
   cmd.gotoxy(24, 27);
-  cmd.write('                               ');
+  cmd.cout('                               ');
   cmd.gotoxy(25, 29);
-  cmd.write('                               ');
+  cmd.cout('                               ');
 
   while (true) {
     cmd.setColor(14);
@@ -185,21 +185,21 @@ async function getHoldCards() {
       if (holdCount >= 2) { // if player has selected enough cards, return
         for (let c = 0; c < 5; c++) {
           cmd.gotoxy((c*14)+11, 23);
-          cmd.write('   ');
+          cmd.cout('   ');
         }
         cmd.gotoxy((cardNum*14)+12, 25);
-        cmd.write(' ');
+        cmd.cout(' ');
         return;
       } else {
         cmd.gotoxy(19, 27);
         cmd.setColor(12);
-        cmd.write('You must hold at least 2 cards to continue.');
+        cmd.cout('You must hold at least 2 cards to continue.');
         cmd.gotoxy(25, 29);
         await cmd.pause();
         cmd.gotoxy(19, 27);
-        cmd.write('                                           ');
+        cmd.cout('                                           ');
         cmd.gotoxy(25, 29);
-        cmd.write('                               ');
+        cmd.cout('                               ');
       }
     }
     // ->if space bar, mark/unmark card
@@ -207,10 +207,10 @@ async function getHoldCards() {
       cmd.gotoxy((cardNum*14)+12, 23);
 
       if (hold[cardNum] === false) {
-        cmd.writeChar(2);
+        cmd.cout(2);
         hold[cardNum] = true;
       } else {
-        cmd.write(' ');
+        cmd.cout(' ');
         hold[cardNum] = false;
       }
     }
@@ -219,18 +219,18 @@ async function getHoldCards() {
       if (move === LEFT_ARROW) {
         if (cardNum > 0) {
           cmd.gotoxy((cardNum*14)+12, 25);
-          cmd.write(' ');
+          cmd.cout(' ');
           cardNum--;
           cmd.gotoxy((cardNum*14)+12, 25);
-          cmd.writeChar(24);
+          cmd.cout(24);
         }
       } else if (move === RIGHT_ARROW) {
         if (cardNum < 4) {
           cmd.gotoxy((cardNum*14)+12, 25);
-          cmd.write(' ');
+          cmd.cout(' ');
           cardNum++;
           cmd.gotoxy((cardNum*14)+12, 25);
-          cmd.writeChar(24);
+          cmd.cout(24);
         }
       }
     }
@@ -336,9 +336,9 @@ async function showDepthLines(lines, n, d) {
     }
 
     cmd.gotoxy(c, floor((lines-c)*n/d));
-    cmd.write('o');
+    cmd.cout('o');
     cmd.gotoxy(80 - c, floor((lines-c)*n/d));
-    cmd.write('o');
+    cmd.cout('o');
 
     await sleep(10);
   }
@@ -350,25 +350,25 @@ function printCardBackSmall(x, y) {
 
   cmd.setColor(6); // border
 
-  cmd.gotoxy(x,   y); cmd.write(cTL + wT + wT + wT + wT + wT + wT + wT + cTR);
-  cmd.gotoxy(x, ++y); cmd.write(wL + '       ' + wR);
-  cmd.gotoxy(x, ++y); cmd.write(wL + '       ' + wR);
-  cmd.gotoxy(x, ++y); cmd.write(wL + '       ' + wR);
-  cmd.gotoxy(x, ++y); cmd.write(wL + '       ' + wR);
-  cmd.gotoxy(x, ++y); cmd.write(wL + '       ' + wR);
-  cmd.gotoxy(x, ++y); cmd.write(wL + '       ' + wR);
-  cmd.gotoxy(x, ++y); cmd.write(wL + '       ' + wR);
-  cmd.gotoxy(x, ++y); cmd.write(cBL + wB + wB + wB + wB + wB + wB + wB + cBR);
+  cmd.gotoxy(x,   y); cmd.cout(cTL + wT + wT + wT + wT + wT + wT + wT + cTR);
+  cmd.gotoxy(x, ++y); cmd.cout(wL + '       ' + wR);
+  cmd.gotoxy(x, ++y); cmd.cout(wL + '       ' + wR);
+  cmd.gotoxy(x, ++y); cmd.cout(wL + '       ' + wR);
+  cmd.gotoxy(x, ++y); cmd.cout(wL + '       ' + wR);
+  cmd.gotoxy(x, ++y); cmd.cout(wL + '       ' + wR);
+  cmd.gotoxy(x, ++y); cmd.cout(wL + '       ' + wR);
+  cmd.gotoxy(x, ++y); cmd.cout(wL + '       ' + wR);
+  cmd.gotoxy(x, ++y); cmd.cout(cBL + wB + wB + wB + wB + wB + wB + wB + cBR);
 
   cmd.setColor(70); // filler
 
-  cmd.gotoxy(++x, y -= 7); cmd.write('.     .');
-  cmd.gotoxy(x, ++y);      cmd.write('W:. .:W');
-  cmd.gotoxy(x, ++y);      cmd.write(':W:.:W:');
-  cmd.gotoxy(x, ++y);      cmd.write(' :W:W: ');
-  cmd.gotoxy(x, ++y);      cmd.write('  :W:  ');
-  cmd.gotoxy(x, ++y);      cmd.write('VEZI   ');
-  cmd.gotoxy(x, ++y);      cmd.write('   PLAY');
+  cmd.gotoxy(++x, y -= 7); cmd.cout('.     .');
+  cmd.gotoxy(x, ++y);      cmd.cout('W:. .:W');
+  cmd.gotoxy(x, ++y);      cmd.cout(':W:.:W:');
+  cmd.gotoxy(x, ++y);      cmd.cout(' :W:W: ');
+  cmd.gotoxy(x, ++y);      cmd.cout('  :W:  ');
+  cmd.gotoxy(x, ++y);      cmd.cout('VEZI   ');
+  cmd.gotoxy(x, ++y);      cmd.cout('   PLAY');
 }
 
 function sortCards(cards) {
@@ -439,19 +439,16 @@ async function showVeziPlayLogo() {
     "               ..::::::..               ",
     "                ........                ",
   ];
-
-  cmd.resize(80, 25);
-
   cmd.endl().endl();
   await sleep(1000);
   cmd.systemColor('F7');
   await sleep(100);
   cmd.systemColor('78');
   for (let row = 0; row < veziPlayLogo.length; row++) {
-    cmd.write('                    ');
-    cmd.write(veziPlayLogo[row]).endl();
+    cmd.cout('                    ');
+    cmd.cout(veziPlayLogo[row]).endl();
   };
-  cmd.endl().write('                        ');
+  cmd.endl().cout('                        ');
   await sleep(100);
   cmd.systemColor('82');
   await sleep(100);
@@ -460,7 +457,7 @@ async function showVeziPlayLogo() {
   const veziPlayTitle = 'VEZI-PLAY';
   for (let c = 0; c < veziPlayTitle.length; c++) {
     await sleep(100);
-    cmd.write(veziPlayTitle[c] + '   ');
+    cmd.cout(veziPlayTitle[c] + '   ');
   }
   await sleep(3000);
   cmd.systemColor('3A');
@@ -474,4 +471,3 @@ async function showVeziPlayLogo() {
   await sleep(1000);
 	/* ---/\--- VEZI-PLAY LOGO END ---/\--- */
 }
-
