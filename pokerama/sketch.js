@@ -203,7 +203,7 @@ async function getHoldCards() {
       }
     }
     // ->if space bar, mark/unmark card
-    else if (move === 32) {
+    else if (move === ' ') {
       cmd.gotoxy((cardNum*14)+12, 23);
 
       if (hold[cardNum] === false) {

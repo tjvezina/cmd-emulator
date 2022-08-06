@@ -32,6 +32,22 @@ const DEFAULT_GRID_HEIGHT = 25;
 
 const TAB_WIDTH = 8;
 
+// Map JavaScript key codes to an array of characters - the first is normal, the second when holding SHIFT
+const KEY_TO_CHAR = {
+  ...new Array(26).fill().reduce((acc, _, i) => {
+    acc[i + toCode('A')] = [toChar(toCode('a') + i), toChar(toCode('A') + i)];
+    return acc;
+  }, {}),
+  ...new Array(10).fill().reduce((acc, _, i) => {
+    acc[i + toCode('0')] = [`${i}`, [')', '!', '@', '#', '$', '%', '^', '&', '*', '('][i]];
+    acc[i + 96] = [`${i}`]; // Numpad digits
+    return acc;
+  }, {}),
+  32: [' '], 106: ['*'], 107: ['+'], 108: ['.'], 109: ['-'], 110: ['.'], 111: ['/'],
+  186: [';', ':'], 187: ['=', '+'], 188: [',', '<'], 189: ['-', '_'], 190: ['.', '>'], 191: ['/', '?'],
+  192: ['`', '~'], 219: ['[', '{'], 220: ['\\', '|'], 221: [']', '}'], 222: ['\'', '"'],
+};
+
 // Make the cmd instance globally accessible
 let cmd;
 
@@ -266,21 +282,65 @@ class Cmd {
     }
   }
 
-  // Unlike the C function `_getch()` this simply returns JavaScript keycodes
-  // i.e. there is no need to call it twice for function/arrow keys
+  /*
+    The separation between keyboard key presses and printable ASCII characters are handled differently in C++ and JS.
+    The original C stdlib _getch() would return a char for the key pressed, sometimes requiring a second call to get
+      a secondary char indicating a special key, like the arrow keys.
+    In JS, there is no built-in bridge between keys and chars, and no `char` primitive, so we attempt to convert each
+      keyCode to a character, returning it in a string if successful, or the keyCode number otherwise. The calling
+      code only has to call getch() once, but must differentiate between strings and numbers if it cares.
+    NOTE: To allow returning capital letters and other symbols, modifier keys are ignored.
+    NOTE: Spacebar is both a char and a special key, but char takes precedence so ' ' is returned, not 32.
+  */
   async getch() {
     this.wasKeyPressed = false;
     do {
       await sleep(0);
-    } while (!this.wasKeyPressed);
+    } while (!this.wasKeyPressed || [SHIFT, CONTROL, ALT, OPTION].includes(keyCode));
     this.wasKeyPressed = false;
 
-    return keyCode;
+    // Return char if possible, else return key code
+    return KEY_TO_CHAR[keyCode]?.[keyIsDown(SHIFT) ? 1 : 0] ?? keyCode;
   }
 
   async pause() {
     this.cout('Press any key to continue . . . ');
     await this.getch();
+  }
+
+  // Mimics basic text input until the user hits enter or escape. Text wrapping is not allowed.
+  async cin({ limit = Infinity, isPassword = false } = {}) {
+    const insertChar = (function(char) {
+      input += char;
+      this.cout(isPassword === true ? '*' : char);
+    }).bind(this);
+
+    const removeChar = (function() {
+      input = input.substring(0, input.length - 1);
+      this.cursor.x--;
+      this.cout(' ');
+      this.cursor.x--;
+    }).bind(this);
+
+    limit = (Number.isFinite(limit) ? limit : this.gridSize.width - this.cursor.x - 1);
+
+    let input = '';
+    let key = await this.getch();
+
+    while (key !== ENTER && key !== ESCAPE) {
+      if (key === BACKSPACE && input.length > 0) {
+        removeChar();
+      }
+
+      if (typeof key === 'string' && input.length < limit) {
+        insertChar(key);
+      }
+
+      key = await this.getch();
+    }
+
+    this.endl();
+    return input;
   }
 
   setColor(colorCode) {

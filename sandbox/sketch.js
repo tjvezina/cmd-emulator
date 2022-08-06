@@ -8,14 +8,26 @@ function setup() {
   createCanvas(windowWidth, windowHeight);
   pixelDensity(1);
 
-  cmdEmulator = new CmdEmulator({ main, title: 'sandbox' });
+  cmdEmulator = new CmdEmulator({ main: inputTest, title: 'sandbox' });
 }
 
 function draw() {
   cmdEmulator.draw();
 }
 
-async function main() {
+async function inputTest() {
+  cmd.cout('\n  Enter text: ');
+  const input = await cmd.cin();
+  cmd.cout('  ' + input);
+
+  cmd.cout('\n\n  Enter secret: ');
+  const secret = await cmd.cin({ isPassword: true });
+  cmd.cout('  ' + secret);
+
+  await cmd.getch();
+}
+
+async function renderPerformanceTest() {
   let counts = [];
 
   let iter = 0;
