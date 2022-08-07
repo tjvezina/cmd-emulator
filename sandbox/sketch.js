@@ -8,7 +8,7 @@ function setup() {
   createCanvas(windowWidth, windowHeight);
   pixelDensity(1);
 
-  cmdEmulator = new CmdEmulator({ main: inputTest, title: 'sandbox' });
+  cmdEmulator = new CmdEmulator({ main: resizeTest, title: 'sandbox' });
 }
 
 function draw() {
@@ -29,7 +29,10 @@ async function inputTest() {
   await cmd.getch();
 
   cmd.setColor(80);
-  cmd.setWindowHeight(425);
+  await cmd.setWindowHeight(425);
+  await cmd.getch();
+
+  cmd.setConsoleTitle('Some fancy title!');
   await cmd.getch();
 
   cmd.systemColor('B2');
@@ -39,15 +42,28 @@ async function inputTest() {
   cmd.cout('Some more text!');
   await cmd.getch();
 
-  cmd.setWindowHeight(0);
+  await cmd.setWindowHeight(0);
   await cmd.getch();
 
   cmd.systemColor('A3');
   await cmd.getch();
 }
 
+async function resizeTest() {
+  for (let i = 0; i < 30; i++) {
+    await cmd.resize(random(50, 90), random(20, 60));
+
+    cmd.gotoxy(0, 0);
+    for (let i = 0; i < cmd.gridSize.width*cmd.gridSize.height; i++) {
+      cmd.cout(floor(random(256)));
+    }
+
+    await sleep(500);
+  }
+}
+
 async function renderPerformanceTest() {
-  cmd.resize(81, 54);
+  await cmd.resize(81, 54);
 
   let counts = [];
 

@@ -32,6 +32,9 @@ const DEFAULT_GRID_HEIGHT = 25;
 
 const TAB_WIDTH = 8;
 
+const ANIMATE_FPS = 24;
+const ANIMATE_SPEED = 1000; // Pixels per second
+
 // Map JavaScript key codes to an array of characters - the first is normal, the second when holding SHIFT
 const KEY_TO_CHAR = {
   ...new Array(26).fill().reduce((acc, _, i) => {
@@ -247,7 +250,7 @@ class Cmd {
   wasKeyPressed = false;
 
   constructor() {
-    this.resize(null, null, { force: true });
+    this.resize(null, null, { force: true, animate: false });
   }
 
   remove() {
@@ -255,15 +258,62 @@ class Cmd {
   }
 
   draw() {
-    const { graphics } = this;
+    const { graphics, pixelSize, title } = this;
+    const { appIcon, systemFont } = CmdEmulator;
+    const { tl, t, tr, l, r, bl, b, br } = Cmd.frameParts;
+
     if (graphics === undefined) {
       return;
     }
 
-    // Translate by a whole number of pixels, or the console display will be blurry
-    translate(round((width - graphics.width) / 2), round((height - graphics.height) / 2));
+    // Translate by a whole number of pixels to display the console properly
+    translate(
+      round((width - pixelSize.width - l.width - r.width) / 2),
+      round((height - pixelSize.height - t.height - b.height) / 2)
+    );
 
-    image(graphics, 0, 0);
+    // Window Frame
+    const cmdWidth = pixelSize.width + l.width + r.width;
+    const cmdHeight = pixelSize.height + t.height + b.height;
+
+    image(tl, 0, 0);
+    image(t, tl.width, 0, cmdWidth - tl.width - tr.width, t.height);
+    image(tr, cmdWidth - tr.width, 0);
+
+    image(l, 0, tl.height, l.width, cmdHeight - tl.height - bl.height);
+    image(r, cmdWidth - r.width, tr.height, r.width, cmdHeight - tr.height - br.height);
+
+    image(bl, 0, cmdHeight - bl.height);
+    image(b, bl.width, cmdHeight - b.height, cmdWidth - bl.width - br.width, b.height);
+    image(br, cmdWidth - br.width, cmdHeight - br.height);
+
+    // Icon & Title
+    image(appIcon, l.width, t.height/2 - 7, 16, 16 / (appIcon.width/appIcon.height));
+
+    const titleX = l.width + 24;
+    const titleY = t.height/2 - 2;
+
+    noStroke();
+    textFont(systemFont);
+    textAlign(LEFT, CENTER);
+    textSize(12);
+    noFill();
+    strokeWeight(8); stroke('#FFFFFF08'); text(title, titleX, titleY);
+    strokeWeight(6); stroke('#FFFFFF18'); text(title, titleX, titleY);
+    strokeWeight(4); stroke('#FFFFFF28'); text(title, titleX, titleY);
+    strokeWeight(2); stroke('#FFFFFF38'); text(title, titleX, titleY);
+    noStroke();
+    fill(0);
+    text(title, titleX, titleY);
+
+    translate(l.width, t.height);
+    
+    // Durating window resize animation, the graphics object size and pixel size may differ
+    const overlapWidth = min(pixelSize.width, graphics.width);
+    const overlapHeight = min(pixelSize.height, graphics.height);
+    fill(COLOR_VALUES[this.backColor]);
+    rect(0, 0, pixelSize.width, pixelSize.height);
+    image(graphics, 0, 0, overlapWidth, overlapHeight, 0, 0, overlapWidth, overlapHeight);
   }
 
   keyPressed() {
@@ -272,7 +322,6 @@ class Cmd {
 
   setConsoleTitle(title) {
     this.title = title;
-    this.drawTitle();
   }
 
   gotoxy(x, y) {
@@ -447,13 +496,13 @@ class Cmd {
     if (height === 0) {
       await this.resize(null, DEFAULT_GRID_HEIGHT);
     } else {
-      await this.resize(null, round((height - t.height - b.height) / Cmd.charHeight));
+      await this.resize(null, (height - t.height - b.height) / Cmd.charHeight);
     }
   }
 
-  async resize(gridWidth, gridHeight, { force = false, animate = false } = {}) {
-    gridWidth ??= this.gridSize.width;
-    gridHeight ??= this.gridSize.height;
+  async resize(gridWidth, gridHeight, { force = false, animate = true } = {}) {
+    gridWidth = round(gridWidth ?? this.gridSize.width);
+    gridHeight = round(gridHeight ?? this.gridSize.height);
 
     if (!force && gridWidth === this.gridSize.width && gridHeight === this.gridSize.height) {
       return;
@@ -462,15 +511,47 @@ class Cmd {
     const prevGridSize = this.gridSize;
 
     this.gridSize = { width: gridWidth, height: gridHeight };
-    this.pixelSize = { width: gridWidth * Cmd.charWidth, height: gridHeight * Cmd.charHeight };
+    const nextPixelSize = { width: gridWidth * Cmd.charWidth, height: gridHeight * Cmd.charHeight };
 
-    const { t, l, r, b } = Cmd.frameParts;
+    if (animate) {
+      const { pixelSize } = this;
+
+      while (pixelSize.width !== nextPixelSize.width || pixelSize.height !== nextPixelSize.height) {
+        if (pixelSize.width < nextPixelSize.width) {
+          pixelSize.width += ANIMATE_SPEED / ANIMATE_FPS;
+          if (pixelSize.width >= nextPixelSize.width) {
+            pixelSize.width = nextPixelSize.width;
+          }
+        } else if (pixelSize.width > nextPixelSize.width) {
+          pixelSize.width -= ANIMATE_SPEED / ANIMATE_FPS;
+          if (pixelSize.width <= nextPixelSize.width) {
+            pixelSize.width = nextPixelSize.width;
+          }
+        }
+        if (pixelSize.height < nextPixelSize.height) {
+          pixelSize.height += ANIMATE_SPEED / ANIMATE_FPS;
+          if (pixelSize.height >= nextPixelSize.height) {
+            pixelSize.height = nextPixelSize.height;
+          }
+        } else if (pixelSize.height > nextPixelSize.height) {
+          pixelSize.height -= ANIMATE_SPEED / ANIMATE_FPS;
+          if (pixelSize.height <= nextPixelSize.height) {
+            pixelSize.height = nextPixelSize.height;
+          }
+        }
+
+        await sleep(1000/ANIMATE_FPS);
+      }
+    }
+
+    this.pixelSize = nextPixelSize;
+
     const { gridSize, pixelSize } = this;
 
     const prevGraphics = this.graphics;
     const prevContentBuffer = this.contentBuffer;
 
-    this.graphics = createGraphics(pixelSize.width + l.width + r.width, pixelSize.height + t.height + b.height);
+    this.graphics = createGraphics(pixelSize.width, pixelSize.height);
     this.graphics.clear();
     this.graphics.noStroke();
 
@@ -483,75 +564,15 @@ class Cmd {
       }
     }
 
-    this.drawFrame();
-
-    this.drawTitle();
-
     this.fillBackground();
 
     if (prevGraphics !== undefined) {
-      const overlapWidth = min(pixelSize.width, prevGraphics.width - l.width - r.width);
-      const overlapHeight = min(pixelSize.height, prevGraphics.height - t.height - b.height);
+      const overlapWidth = min(this.graphics.width, prevGraphics.width);
+      const overlapHeight = min(this.graphics.height, prevGraphics.height);
 
-      this.graphics.image(prevGraphics,
-        0, 0, overlapWidth, overlapHeight,
-        l.width, t.height, overlapWidth, overlapHeight
-      );
+      this.graphics.image(prevGraphics, 0, 0, overlapWidth, overlapHeight, 0, 0, overlapWidth, overlapHeight);
 
       prevGraphics.remove();
     }
-  }
-
-  drawFrame() {
-    const { graphics } = this;
-    const { tl, t, tr, l, r, bl, b, br } = Cmd.frameParts;
-
-    graphics.resetMatrix();
-
-    graphics.image(tl, 0, 0);
-    graphics.image(t, tl.width, 0, graphics.width - tl.width - tr.width, t.height);
-    graphics.image(tr, graphics.width - tr.width, 0);
-
-    graphics.image(l, 0, tl.height, l.width, graphics.height - tl.height - bl.height);
-    graphics.image(r, graphics.width - r.width, tr.height, r.width, graphics.height - tr.height - br.height);
-
-    graphics.image(bl, 0, graphics.height - bl.height);
-    graphics.image(b, bl.width, graphics.height - b.height, graphics.width - bl.width - br.width, b.height);
-    graphics.image(br, graphics.width - br.width, graphics.height - br.height);
-
-    graphics.translate(l.width, t.height);
-  }
-
-  drawTitle() {
-    const { graphics, title } = this;
-    const { tl, t, tr, l } = Cmd.frameParts;
-    const { appIcon, systemFont } = CmdEmulator;
-
-    graphics.resetMatrix();
-
-    graphics.image(t, tl.width, 0, graphics.width-tl.width-tr.width, t.height);
-    
-    graphics.image(appIcon, l.width, t.height/2 - 7, 16, 16 / (appIcon.width/appIcon.height));
-
-    const titleX = l.width + 24;
-    const titleY = t.height/2 - 2;
-
-    graphics.push();
-    {
-      graphics.noStroke();
-      graphics.textFont(systemFont);
-      graphics.textAlign(LEFT, CENTER);
-      graphics.textSize(12);
-      graphics.noFill();
-      graphics.strokeWeight(8); graphics.stroke('#FFFFFF08'); graphics.text(title, titleX, titleY);
-      graphics.strokeWeight(6); graphics.stroke('#FFFFFF18'); graphics.text(title, titleX, titleY);
-      graphics.strokeWeight(4); graphics.stroke('#FFFFFF28'); graphics.text(title, titleX, titleY);
-      graphics.strokeWeight(2); graphics.stroke('#FFFFFF38'); graphics.text(title, titleX, titleY);
-      graphics.noStroke();
-      graphics.fill(0); graphics.text(title, titleX, titleY);
-    }
-    graphics.pop();
-
-    graphics.translate(l.width, t.height);
   }
 }
