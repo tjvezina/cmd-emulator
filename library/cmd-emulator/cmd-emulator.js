@@ -238,7 +238,7 @@ class Cmd {
 
   // Main p5.Graphics object for drawing the CMD window and content
   graphics;
-  // Mirrors the current foreground content in white for quick redraw in a new color (see `systemColor()`)
+  // Mirror of char codes rendered on the screen, used when re-drawing in a new color (see `systemColor()`)
   contentBuffer;
 
   foreColor = Color.Gray;
@@ -247,17 +247,23 @@ class Cmd {
   wasKeyPressed = false;
 
   constructor() {
-    this.onResized();
+    this.resize(null, null, { force: true });
   }
 
   remove() {
     this.graphics?.remove();
-    this.contentBuffer?.remove();
   }
 
   draw() {
     const { graphics } = this;
-    image(graphics, round((width - graphics.width) / 2), round((height - graphics.height) / 2));
+    if (graphics === undefined) {
+      return;
+    }
+
+    // Translate by a whole number of pixels, or the console display will be blurry
+    translate(round((width - graphics.width) / 2), round((height - graphics.height) / 2));
+
+    image(graphics, 0, 0);
   }
 
   keyPressed() {
@@ -350,26 +356,39 @@ class Cmd {
 
   // Redraws the console all in one color (equivalent to C++ stdlib system("color XX") function)
   systemColor(colorCode) {
-    const { graphics, pixelSize } = this;
+    const { contentBuffer, gridSize } = this;
 
     [this.backColor, this.foreColor] = [...colorCode.padStart(2, '0')].map(i => parseInt(i, 16));
 
-    graphics.fill(COLOR_VALUES[this.backColor]);
-    graphics.rect(0, 0, pixelSize.width, pixelSize.height);
+    this.fillBackground();
 
-    graphics.tint(COLOR_VALUES[this.foreColor]);
-    graphics.image(this.contentBuffer, 0, 0);
-    graphics.noTint();
+    const prevCursor = this.cursor;
+
+    for (let y = 0; y < gridSize.height; y++) {
+      for (let x = 0; x < gridSize.width; x++) {
+        const code = contentBuffer[x + y*gridSize.width];
+        if (code !== undefined && code !== toCode(' ')) {
+          this.gotoxy(x, y);
+          this.printCharCode(code);
+        }
+      }
+    }
+
+    this.cursor = prevCursor;
   }
 
   clear() {
-    const { graphics, pixelSize } = this;
+    this.fillBackground();
     
+    this.contentBuffer.fill(undefined);
+    this.cursor = { x: 0, y: 0 };
+  }
+
+  fillBackground() {
+    const { graphics, pixelSize } = this;
+
     graphics.fill(COLOR_VALUES[this.backColor]);
     graphics.rect(0, 0, pixelSize.width, pixelSize.height);
-    
-    this.contentBuffer.clear();
-    this.cursor = { x: 0, y: 0 };
   }
 
   endl() {
@@ -407,10 +426,6 @@ class Cmd {
     graphics.fill(COLOR_VALUES[this.backColor]);
     graphics.rect(dx, dy, charWidth, charHeight);
 
-    contentBuffer.erase();
-    contentBuffer.rect(dx, dy, charWidth, charHeight);
-    contentBuffer.noErase();
-
     const cx = (this.foreColor % 4) * asciiFontMap.width;
     const cy = floor(this.foreColor / 4) * asciiFontMap.height;
 
@@ -419,54 +434,72 @@ class Cmd {
 
     graphics.image(asciiFontColorMap, dx, dy, charWidth, charHeight, sx+cx, sy+cy, charWidth, charHeight);
 
-    contentBuffer.image(asciiFontMap, dx, dy, charWidth, charHeight, sx, sy, charWidth, charHeight);
+    contentBuffer[this.cursor.x + this.cursor.y*this.gridSize.width] = code;
 
     this.advanceCursor();
 
     return this;
   }
 
-  setWindowHeight(height) {
+  async setWindowHeight(height) {
     const { t, b } = Cmd.frameParts;
 
     if (height === 0) {
-      this.resize(undefined, DEFAULT_GRID_HEIGHT);
+      await this.resize(null, DEFAULT_GRID_HEIGHT);
     } else {
-      this.resize(undefined, round((height - t.height - b.height) / Cmd.charHeight));
+      await this.resize(null, round((height - t.height - b.height) / Cmd.charHeight));
     }
   }
 
-  resize(width, height) {
-    width ??= this.gridSize.width;
-    height ??= this.gridSize.height;
-    if (width !== this.gridSize.width || height !== this.gridSize.height) {
-      this.gridSize = { width, height };
-      this.onResized();
-    }
-  }
+  async resize(gridWidth, gridHeight, { force = false, animate = false } = {}) {
+    gridWidth ??= this.gridSize.width;
+    gridHeight ??= this.gridSize.height;
 
-  onResized() {
-    const { gridSize, pixelSize } = this;
+    if (!force && gridWidth === this.gridSize.width && gridHeight === this.gridSize.height) {
+      return;
+    }
+
+    const prevGridSize = this.gridSize;
+
+    this.gridSize = { width: gridWidth, height: gridHeight };
+    this.pixelSize = { width: gridWidth * Cmd.charWidth, height: gridHeight * Cmd.charHeight };
+
     const { t, l, r, b } = Cmd.frameParts;
+    const { gridSize, pixelSize } = this;
 
-    pixelSize.width = gridSize.width * Cmd.charWidth;
-    pixelSize.height = gridSize.height * Cmd.charHeight;
+    const prevGraphics = this.graphics;
+    const prevContentBuffer = this.contentBuffer;
 
-    this.graphics?.remove();
     this.graphics = createGraphics(pixelSize.width + l.width + r.width, pixelSize.height + t.height + b.height);
     this.graphics.clear();
     this.graphics.noStroke();
 
-    this.contentBuffer?.remove();
-    this.contentBuffer = createGraphics(pixelSize.width, pixelSize.height);
-    this.contentBuffer.clear();
-    this.contentBuffer.noStroke();
+    this.contentBuffer = new Array(gridSize.width * gridSize.height).fill(undefined);
+    if (prevContentBuffer !== undefined) {
+      for (let y = 0; y < min(prevGridSize.height, gridSize.height); y++) {
+        for (let x = 0; x < min(prevGridSize.width, gridSize.width); x++) {
+          this.contentBuffer[x + y*gridSize.width] = prevContentBuffer[x + y*prevGridSize.width];
+        }
+      }
+    }
 
     this.drawFrame();
 
     this.drawTitle();
 
-    this.clear();
+    this.fillBackground();
+
+    if (prevGraphics !== undefined) {
+      const overlapWidth = min(pixelSize.width, prevGraphics.width - l.width - r.width);
+      const overlapHeight = min(pixelSize.height, prevGraphics.height - t.height - b.height);
+
+      this.graphics.image(prevGraphics,
+        0, 0, overlapWidth, overlapHeight,
+        l.width, t.height, overlapWidth, overlapHeight
+      );
+
+      prevGraphics.remove();
+    }
   }
 
   drawFrame() {

@@ -23,11 +23,32 @@ async function inputTest() {
   cmd.cout('\n\n  Enter secret: ');
   const secret = await cmd.getline({ isPassword: true });
   cmd.cout('  ' + secret);
+  await cmd.getch();
 
+  cmd.systemColor('E0');
+  await cmd.getch();
+
+  cmd.setColor(80);
+  cmd.setWindowHeight(425);
+  await cmd.getch();
+
+  cmd.systemColor('B2');
+  await cmd.getch();
+  
+  cmd.gotoxy(2, cmd.gridSize.height - 2);
+  cmd.cout('Some more text!');
+  await cmd.getch();
+
+  cmd.setWindowHeight(0);
+  await cmd.getch();
+
+  cmd.systemColor('A3');
   await cmd.getch();
 }
 
 async function renderPerformanceTest() {
+  cmd.resize(81, 54);
+
   let counts = [];
 
   let iter = 0;

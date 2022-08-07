@@ -32,8 +32,6 @@ function draw() {
 }
 
 async function main() {
-  cmd.resize(80, 25);
-
   cmd.setConsoleTitle('Hedge Maze - Vezi-Play');
 
   await showVeziPlayLogo();
