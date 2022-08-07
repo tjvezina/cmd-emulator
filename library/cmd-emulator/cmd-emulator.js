@@ -35,22 +35,6 @@ const TAB_WIDTH = 8;
 const ANIMATE_FPS = 24;
 const ANIMATE_SPEED = 1000; // Pixels per second
 
-// Map JavaScript key codes to an array of characters - the first is normal, the second when holding SHIFT
-const KEY_TO_CHAR = {
-  ...new Array(26).fill().reduce((acc, _, i) => {
-    acc[i + toCode('A')] = [toChar(toCode('a') + i), toChar(toCode('A') + i)];
-    return acc;
-  }, {}),
-  ...new Array(10).fill().reduce((acc, _, i) => {
-    acc[i + toCode('0')] = [`${i}`, [')', '!', '@', '#', '$', '%', '^', '&', '*', '('][i]];
-    acc[i + 96] = [`${i}`]; // Numpad digits
-    return acc;
-  }, {}),
-  32: [' '], 106: ['*'], 107: ['+'], 108: ['.'], 109: ['-'], 110: ['.'], 111: ['/'],
-  186: [';', ':'], 187: ['=', '+'], 188: [',', '<'], 189: ['-', '_'], 190: ['.', '>'], 191: ['/', '?'],
-  192: ['`', '~'], 219: ['[', '{'], 220: ['\\', '|'], 221: [']', '}'], 222: ['\'', '"'],
-};
-
 // Make the cmd instance globally accessible
 let cmd;
 
@@ -155,8 +139,8 @@ class CmdEmulator {
     }
   }
 
-  keyPressed() {
-    cmd?.keyPressed();
+  keyPressed(event) {
+    cmd?.keyPressed(event);
   }
 
   drawBackground() {
@@ -247,7 +231,7 @@ class Cmd {
   foreColor = Color.Gray;
   backColor = Color.Black;
 
-  wasKeyPressed = false;
+  lastKeyEvent;
 
   constructor() {
     this.resize(null, null, { force: true, animate: false });
@@ -316,8 +300,8 @@ class Cmd {
     image(graphics, 0, 0, overlapWidth, overlapHeight, 0, 0, overlapWidth, overlapHeight);
   }
 
-  keyPressed() {
-    this.wasKeyPressed = true;
+  keyPressed(event) {
+    this.lastKeyEvent = event;
   }
 
   setConsoleTitle(title) {
@@ -341,21 +325,27 @@ class Cmd {
     The separation between keyboard key presses and printable ASCII characters are handled differently in C++ and JS.
     The original C stdlib _getch() would return a char for the key pressed, sometimes requiring a second call to get
       a secondary char indicating a special key, like the arrow keys.
-    In JS, there is no built-in bridge between keys and chars, and no `char` primitive, so we attempt to convert each
-      keyCode to a character, returning it in a string if successful, or the keyCode number otherwise. The calling
-      code only has to call getch() once, but must differentiate between strings and numbers if it cares.
+    In JS, there is no `char` primitive that can be treated as either a string or number, so we return a one-character
+      string when possible, or the pressed keyCode (number) otherwise. The calling code only has to call getch() once,
+      but must differentiate between strings and numbers if it cares.
     NOTE: To allow returning capital letters and other symbols, modifier keys are ignored.
-    NOTE: Spacebar is both a char and a special key, but char takes precedence so ' ' is returned, not 32.
   */
   async getch() {
-    this.wasKeyPressed = false;
+    // Ignore modifier keys, or other keys while a modified is held, except shift
+    function isValidEvent(event) {
+      return event !== undefined &&
+        !event.ctrlKey && !event.altKey && !event.metaKey && event.keyCode !== SHIFT;
+    }
+
+    this.lastKeyEvent = undefined;
     do {
       await sleep(0);
-    } while (!this.wasKeyPressed || [SHIFT, CONTROL, ALT, OPTION].includes(keyCode));
-    this.wasKeyPressed = false;
-
-    // Return char if possible, else return key code
-    return KEY_TO_CHAR[keyCode]?.[keyIsDown(SHIFT) ? 1 : 0] ?? keyCode;
+    } while (!isValidEvent(this.lastKeyEvent));
+    
+    const event = this.lastKeyEvent;
+    this.lastKeyEvent = undefined;
+    
+    return (event.key.length === 1 ? event.key : event.keyCode);
   }
 
   async pause() {
