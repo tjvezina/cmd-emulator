@@ -309,7 +309,7 @@ class Cmd {
   }
 
   // Mimics basic text input until the user hits enter or escape. Text wrapping is not allowed.
-  async cin({ limit = Infinity, isPassword = false } = {}) {
+  async getline({ limit = Infinity, isPassword = false } = {}) {
     const insertChar = (function(char) {
       input += char;
       this.cout(isPassword === true ? '*' : char);

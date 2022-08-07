@@ -17,11 +17,11 @@ function draw() {
 
 async function inputTest() {
   cmd.cout('\n  Enter text: ');
-  const input = await cmd.cin();
+  const input = await cmd.getline();
   cmd.cout('  ' + input);
 
   cmd.cout('\n\n  Enter secret: ');
-  const secret = await cmd.cin({ isPassword: true });
+  const secret = await cmd.getline({ isPassword: true });
   cmd.cout('  ' + secret);
 
   await cmd.getch();
