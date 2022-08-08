@@ -374,7 +374,7 @@ function printCardBackSmall(x, y) {
 function sortCards(cards) {
   let sorted = false;
 
-  let holder = new Card(0, 0);
+  let holder;
 
   do {
     sorted = true; // if still true at end, cards are sorted

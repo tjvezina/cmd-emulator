@@ -307,7 +307,7 @@ async function showGameMenu() {
       option = await cmd.getch();
     } while ((typeof option !== 'string' || (option < '1' || option > '4')) && option !== 27); // allow 1-4 or ESC
 
-    ding.Play();
+    ding.play();
 
     const blackjackGame = new Blackjack();
     const goFishGame = new GoFish();
@@ -316,16 +316,16 @@ async function showGameMenu() {
 
     switch (option) {
       case '1':
-        bank = blackjackGame.play(bank);
+        bank = await blackjackGame.play(bank);
         break;
       case '2':
-        bank = goFishGame.play(bank);
+        bank = await goFishGame.play(bank);
         break;
       case '3':
-        bank = crapsGame.play(bank);
+        bank = await crapsGame.play(bank);
         break;
       case '4':
-        bank = snapGame.play(bank);
+        bank = await snapGame.play(bank);
         break;
       case 27:
         return; // go back to user menu
@@ -477,7 +477,7 @@ async function deleteProfile() {
 
       const blank = new CasinoProfile();
       profiles[profileNum-1] = blank;
-      ding.Play();
+      ding.play();
       cmd.cout('\n\n  Profile deleted.\n\n  ');
       await cmd.pause();
       return;

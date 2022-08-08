@@ -38,7 +38,7 @@ class Deck {
   }
 
   shuffleDeck() {
-    let cardHold = new Card(1, 1);
+    let cardHold;
     let randomCard = 0;
 
     for (let c = 0; c < this.deckOfCards.length; c++) {
