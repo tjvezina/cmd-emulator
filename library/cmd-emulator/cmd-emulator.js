@@ -495,8 +495,8 @@ class Cmd {
   }
 
   async resize(gridWidth, gridHeight, { force = false, animate = true } = {}) {
-    gridWidth = round(gridWidth ?? this.gridSize.width);
-    gridHeight = round(gridHeight ?? this.gridSize.height);
+    gridWidth = floor(gridWidth ?? this.gridSize.width);
+    gridHeight = floor(gridHeight ?? this.gridSize.height);
 
     if (!force && gridWidth === this.gridSize.width && gridHeight === this.gridSize.height) {
       return;
