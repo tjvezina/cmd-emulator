@@ -8,7 +8,7 @@ function setup() {
   createCanvas(windowWidth, windowHeight);
   pixelDensity(1);
 
-  cmdEmulator = new CmdEmulator({ main: resizeTest, title: 'sandbox' });
+  cmdEmulator = new CmdEmulator({ main: inputTest, title: 'sandbox' });
 }
 
 function draw() {
@@ -16,13 +16,38 @@ function draw() {
 }
 
 async function inputTest() {
+  cmd.setColor(0xE);
   cmd.cout('\n  Enter text: ');
+  cmd.setColor(0x7);
   const input = await cmd.getline();
-  cmd.cout('  ' + input);
+  cmd.cout('  ');
+  cmd.setColor(0x8F);
+  cmd.cout(input);
 
+  cmd.setColor(0xE);
   cmd.cout('\n\n  Enter secret: ');
+  cmd.setColor(0x7);
   const secret = await cmd.getline({ isPassword: true });
-  cmd.cout('  ' + secret);
+  cmd.cout('  ');
+  cmd.setColor(0x8F);
+  cmd.cout(secret);
+
+  cmd.setColor(0xE);
+  cmd.cout('\n\n  Enter integer: ');
+  cmd.setColor(0x7);
+  const num = await cmd.getline({ include: /[0-9]/ })
+  cmd.cout('  ');
+  cmd.setColor(0x8F);
+  cmd.cout(num)
+
+  cmd.setColor(0xE);
+  cmd.cout('\n\n  Enter more text (no symbols): ');
+  cmd.setColor(0x7);
+  const text = await cmd.getline({ exclude: /[!@#$%^&*]/ });
+  cmd.cout('  ');
+  cmd.setColor(0x8F);
+  cmd.cout(text);
+
   await cmd.getch();
 
   cmd.systemColor('E0');

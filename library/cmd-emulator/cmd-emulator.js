@@ -333,7 +333,7 @@ class Cmd {
   async getch() {
     // Ignore modifier keys, or other keys while a modified is held, except shift
     function isValidEvent(event) {
-      return event !== undefined &&
+      return event !== undefined && event.keyCode !== TAB &&
         !event.ctrlKey && !event.altKey && !event.metaKey && event.keyCode !== SHIFT;
     }
 
@@ -354,7 +354,7 @@ class Cmd {
   }
 
   // Mimics basic text input until the user hits enter or escape. Text wrapping is not allowed.
-  async getline({ limit = Infinity, isPassword = false } = {}) {
+  async getline({ limit = Infinity, isPassword = false, include, exclude } = {}) {
     const insertChar = (function(char) {
       input += char;
       this.cout(isPassword === true ? '*' : char);
@@ -372,12 +372,16 @@ class Cmd {
     let input = '';
     let key = await this.getch();
 
-    while (key !== ENTER && key !== ESCAPE) {
+    while ((key !== ENTER && key !== ESCAPE) || input.length == 0) {
       if (key === BACKSPACE && input.length > 0) {
         removeChar();
       }
 
-      if (typeof key === 'string' && input.length < limit) {
+      if (typeof key === 'string' && input.length < limit &&
+        (key !== ' ' || input.length > 0 || isPassword === true) &&
+        (include === undefined || include.test(key)) &&
+        (exclude === undefined || !exclude.test(key))
+      ) {
         insertChar(key);
       }
 
@@ -385,7 +389,7 @@ class Cmd {
     }
 
     this.endl();
-    return input;
+    return (isPassword ? input : input.trim());
   }
 
   setColor(colorCode) {
