@@ -1,7 +1,3 @@
-async function sleep(ms) {
-  return await new Promise(resolve => setTimeout(resolve, ms));
-}
-
 class Color {
   static Black     = 0x0;
   static DarkBlue  = 0x1;

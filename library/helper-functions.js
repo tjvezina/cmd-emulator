@@ -17,6 +17,10 @@ function wrapP5Events(target, ...events) {
 function toChar(code) { return String.fromCharCode(code); }
 function toCode(char) { return char.charCodeAt(0); }
 
+async function sleep(ms) {
+  return await new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function sha256(message) {
   if (typeof message !== 'string' || message.length === 0) {
     return '';
