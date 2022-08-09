@@ -10,9 +10,9 @@ let deal2;
 let deal3;
 let deal4;
 let deal5;
+
 let diceRoll;
-let diceShakeLong;
-let diceShakeShort;
+let diceShaker;
 
 let logoSound;
 
@@ -39,9 +39,8 @@ function preload() {
   loadSound(`assets/card_deal4.wav`, result => deal4 = result);
   loadSound(`assets/card_deal5.wav`, result => deal5 = result);
 
-  loadSound('assets/dice_roll.wav', result => diceRollSound = result);
-  loadSound('assets/dice_shake_long.wav', result => diceShakeLongSound = result);
-  loadSound('assets/dice_shake_short.wav', result => diceShakeShortSound = result);
+  loadSound('assets/dice_roll.wav', result => diceRoll = result);
+  loadSound('assets/dice_shake_short.wav', result => diceShaker = result);
 
   loadSound('assets/VeziPlayLogoSound.wav', result => logoSound = result);
 

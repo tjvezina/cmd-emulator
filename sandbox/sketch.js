@@ -35,7 +35,7 @@ async function inputTest() {
   cmd.setColor(0xE);
   cmd.cout('\n\n  Enter integer: ');
   cmd.setColor(0x7);
-  const num = await cmd.getline({ include: /[0-9]/ })
+  const num = Number(await cmd.getline({ include: /[0-9]/ }))
   cmd.cout('  ');
   cmd.setColor(0x8F);
   cmd.cout(num)

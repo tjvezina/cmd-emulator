@@ -224,7 +224,7 @@ class GoFish {
     do {
       cmd.gotoxy(50, 27); cmd.cout('                              ');
       cmd.gotoxy(25, 27); cmd.cout('Enter a bet (bank = $' + this.bank + '): ');
-      this.bet = await cmd.getline({ include: /[0-9]/ });
+      this.bet = Number(await cmd.getline({ include: /[0-9]/ }));
     } while (this.bet < 0 || this.bet > this.bank);
 
     cmd.clear();
