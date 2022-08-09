@@ -326,16 +326,21 @@ class Cmd {
       but must differentiate between strings and numbers if it cares.
     NOTE: To allow returning capital letters and other symbols, modifier keys are ignored.
   */
-  async getch() {
+  async getch({ onInterval, interval = 100 } = {}) {
     // Ignore modifier keys, or other keys while a modified is held, except shift
     function isValidEvent(event) {
       return event !== undefined && event.keyCode !== TAB &&
         !event.ctrlKey && !event.altKey && !event.metaKey && event.keyCode !== SHIFT;
     }
 
+    let lastIntervalTime = millis();
     this.lastKeyEvent = undefined;
     do {
       await sleep(0);
+      if (onInterval !== undefined && (millis() - lastIntervalTime) > interval) {
+        lastIntervalTime = millis();
+        onInterval();
+      }
     } while (!isValidEvent(this.lastKeyEvent));
     
     const event = this.lastKeyEvent;
@@ -344,9 +349,9 @@ class Cmd {
     return (event.key.length === 1 ? event.key : event.keyCode);
   }
 
-  async pause() {
+  async pause({ onInterval, interval } = {}) {
     this.cout('Press any key to continue . . . ');
-    await this.getch();
+    await this.getch({ onInterval, interval });
   }
 
   // Mimics basic text input until the user hits enter or escape. Text wrapping is not allowed.
