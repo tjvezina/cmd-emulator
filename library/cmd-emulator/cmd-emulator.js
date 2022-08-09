@@ -21,7 +21,7 @@ const COLOR_VALUES = [
   '#808080', '#0000FF', '#00FF00', '#00FFFF', '#FF0000', '#FF00FF', '#FFFF00', '#FFFFFF',
 ];
 
-const CMD_ASSET_PATH = '/library/cmd-emulator/assets';
+const CMD_ASSET_PATH = '../library/cmd-emulator/assets';
 
 const DEFAULT_GRID_WIDTH = 80;
 const DEFAULT_GRID_HEIGHT = 25;
