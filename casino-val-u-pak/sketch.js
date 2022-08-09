@@ -18,13 +18,13 @@ let logoSound;
 
 let casinoTheme;
 
-let playerName = '';
-let bank = 0;
+let playerName;
+let bank;
 
 // to store profiles for user selection
 const totalProfiles = 20;
-let profiles = [];
-let loadedProfile = 0; // the profile number for the current user
+let profiles;
+let loadedProfile; // the profile number for the current user
 let currentUser; // the current user's profile
 
 function preload() {
@@ -63,6 +63,12 @@ function draw() {
 }
 
 async function main() {
+  playerName = '';
+  bank = 0;
+  profiles = [];
+  loadedProfile = 0;
+  currentUser = undefined;
+
   cmd.setConsoleTitle('C A S I N O   V A L - U - P A K        Vezi-Play');
 
   await showVeziPlayLogo();
@@ -75,7 +81,17 @@ async function main() {
   // load profiles once at beginning of program
   loadCasinoProfiles();
 
-  await showMainMenu();
+  loadedProfile = getItem('loaded-profile') ?? 0;
+  if (loadedProfile === 0) {
+    await showMainMenu();
+  } else {
+    currentUser = profiles[loadedProfile - 1];
+    playerName = currentUser.userName;
+    bank = currentUser.bankBalance;
+    if (await showUserMenu()) {
+      await showMainMenu();
+    }
+  }
 
   // save profiles before end of program
   saveCasinoProfiles();
@@ -89,14 +105,16 @@ async function main() {
 }
 
 async function showMainMenu() {
-  cmd.systemColor('E');
-
   let option = 0;
 
   let stayInMenu = true, passwordConfirm = true;
 
   while (stayInMenu) {
+    loadedProfile = 0; //reset when user "logs out"
+    storeItem('loaded-profile', 0);
+
     cmd.clear();
+    cmd.systemColor('E');
 
     cmd.cout('\n  Welcome to the CASINO VAL-U-PAK!');
     cmd.cout('\n\n  Please make a selection from the following (ESC to exit):');
@@ -145,13 +163,12 @@ async function showMainMenu() {
     }
 
     currentUser = profiles[loadedProfile - 1];
+    storeItem('loaded-profile', loadedProfile);
 
     playerName = currentUser.userName;
     bank = currentUser.bankBalance;
 
     stayInMenu = await showUserMenu();
-
-    loadedProfile = 0; //reset when user "logs out"
   }
 }
 
@@ -160,6 +177,7 @@ async function showUserMenu() {
     // loop user menu until 4 or ESC are selected
     // let user select game
     cmd.clear();
+    cmd.systemColor('E');
 
     let option = 0;
 
@@ -481,6 +499,7 @@ async function deleteProfile() {
 
       const blank = new CasinoProfile();
       profiles[profileNum-1] = blank;
+      saveCasinoProfiles();
       ding.play();
       cmd.cout('\n\n  Profile deleted.\n\n  ');
       await cmd.pause();
