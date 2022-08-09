@@ -1,7 +1,6 @@
 class Blackjack {
   bank = 100;
   bet = 50;
-  pushTotal = 0;
 
   async play(bank) {
     cmd.setConsoleTitle('Blackjack - Casino Val-U-Pak - Vezi-Play');
@@ -40,14 +39,6 @@ class Blackjack {
     this.showDealerTable();
 
     do {
-      if (this.pushTotal > 0) {
-        cmd.gotoxy(24, 18);
-        cmd.setColor(31);
-        cmd.cout('   Push - last bet was: ');
-        cmd.setColor(26);
-        cmd.cout('$' + this.pushTotal);
-      }
-
       cmd.gotoxy(18, 19);
       cmd.setColor(31);
       cmd.cout('Place your bet (bank = $' + this.bank + '): ');
@@ -65,8 +56,6 @@ class Blackjack {
       cmd.gotoxy(18, 19);
       cmd.cout('                                                    ');
     } while (this.bet < 0 || this.bet > this.bank); // loop until valid input
-
-    this.bet += this.pushTotal; // track push total in case of tie
 
     this.showBankAndBet();
 
@@ -182,13 +171,9 @@ class Blackjack {
       cmd.setColor(28);
       if (dTotal !== 21) {
         cmd.cout('BLACKJACK!');
-        this.bank += (this.bet * 3 / 2);
-        this.pushTotal = 0;
+        this.bank += round(this.bet * 3 / 2);
       } else {
-        cmd.cout('Tie - push.');
-        if (this.pushTotal === 0) {
-          this.pushTotal = this.bet;
-        }
+        cmd.cout('Stand-off.');
       }
 
       await cmd.getch();
@@ -203,10 +188,10 @@ class Blackjack {
       // delay between each move to allow user to follow
       await sleep(500);
 
-      // Dealer's turn; automatically add cards while score < player score
+      // Dealer's turn; automatically add cards while score < 17
       // reuse variable "cardNumber" from player's turn
       cardNumber = 2;
-      while (dTotal < pTotal) {
+      while (dTotal < 17) {
         cardNumber++;
 
         dCards.push(myDeck.dealCard());
@@ -236,19 +221,14 @@ class Blackjack {
 
       cmd.gotoxy(33, 19);
       cmd.setColor(28);
-      if (dTotal > 21) { // if opp busted
+      if (dTotal > 21) { // if dealer busted
         cmd.cout('Player wins!');
         this.bank += this.bet;
-        this.pushTotal = 0;
       } else if (dTotal === pTotal) {
-        cmd.cout('Tie - push.');
-        if (this.pushTotal === 0) {
-          this.pushTotal = this.bet;
-        }
+        cmd.cout('Stand-off.');
       } else {
         cmd.cout('Dealer wins.');
         this.bank -= this.bet;
-        this.pushTotal = 0;
       }
 
       await cmd.getch();
@@ -262,7 +242,6 @@ class Blackjack {
       cmd.setColor(28);
       cmd.cout('Dealer wins.');
       this.bank -= this.bet;
-      this.pushTotal = 0;
 
       await cmd.getch();
       return;
