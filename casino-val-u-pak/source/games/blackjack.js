@@ -221,7 +221,7 @@ class Blackjack {
 
       cmd.gotoxy(33, 19);
       cmd.setColor(28);
-      if (dTotal > 21) { // if dealer busted
+      if (dTotal < pTotal || dTotal > 21) { // if dealer busted or failed to beat player
         cmd.cout('Player wins!');
         this.bank += this.bet;
       } else if (dTotal === pTotal) {
