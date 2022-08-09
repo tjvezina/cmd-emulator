@@ -356,6 +356,7 @@ async function showGameMenu() {
     // reset console title
     cmd.setConsoleTitle('C A S I N O   V A L - U - P A K        Vezi-Play');
 
+    bank = max(0, round(bank));
     if (bank === 0) {
       bank = 100;
 
