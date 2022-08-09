@@ -339,7 +339,10 @@ class Cmd {
       await sleep(0);
       if (onInterval !== undefined && (millis() - lastIntervalTime) > interval) {
         lastIntervalTime = millis();
-        onInterval();
+        const cancel = onInterval();
+        if (cancel === true) {
+          return null;
+        }
       }
     } while (!isValidEvent(this.lastKeyEvent));
     
