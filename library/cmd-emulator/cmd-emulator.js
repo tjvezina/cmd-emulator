@@ -456,6 +456,13 @@ class Cmd {
     return this;
   }
 
+  centerString(row, text) {
+    let spacing = max(0, floor((this.gridSize.width - text.length) / 2));
+
+    this.gotoxy(spacing, row);
+    this.cout(text.substring(0, this.gridSize.width));
+  }
+  
   printCharCode(code) {
     if (!Number.isInteger(code) || code < 0 || code >= 256) {
       throw new Error('Invalid ascii code: ' + code);

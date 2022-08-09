@@ -4,11 +4,15 @@ let accessDenied;
 let ding;
 let badDing;
 
-let cardShuffleSound;
-let cardDealSounds = [];
-let diceRollSound;
-let diceShakeLongSound;
-let diceShakeShortSound;
+let cardShuffle;
+let deal1;
+let deal2;
+let deal3;
+let deal4;
+let deal5;
+let diceRoll;
+let diceShakeLong;
+let diceShakeShort;
 
 let logoSound;
 
@@ -28,11 +32,12 @@ function preload() {
   loadSound('assets/Ding.wav', result => ding = result);
   loadSound('assets/BadDing.wav', result => badDing = result);
 
-  loadSound('assets/card_shuffle.wav', result => cardShuffleSound = result);
-  for (let i = 0; i < 5; i++) {
-    const index = i;
-    loadSound(`assets/card_deal${i+1}.wav`, result => cardDealSounds[index] = result);
-  }
+  loadSound('assets/card_shuffle.wav', result => cardShuffle = result);
+  loadSound(`assets/card_deal1.wav`, result => deal1 = result);
+  loadSound(`assets/card_deal2.wav`, result => deal2 = result);
+  loadSound(`assets/card_deal3.wav`, result => deal3 = result);
+  loadSound(`assets/card_deal4.wav`, result => deal4 = result);
+  loadSound(`assets/card_deal5.wav`, result => deal5 = result);
 
   loadSound('assets/dice_roll.wav', result => diceRollSound = result);
   loadSound('assets/dice_shake_long.wav', result => diceShakeLongSound = result);
