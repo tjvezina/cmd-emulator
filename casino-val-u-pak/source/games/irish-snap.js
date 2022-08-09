@@ -297,9 +297,9 @@ class IrishSnap {
       return 3; // dealer snapped on match
     } else if (!timeUp) {
       cmd.setColor(46);
-      cmd.gotoxy(0, 2);
-      cmd.cout('              ');
-      cmd.gotoxy(0, 2);
+      cmd.gotoxy(76, 44);
+      cmd.cout('    ');
+      cmd.gotoxy(76, 44);
       cmd.cout(`${round(millis() - startTime)}`);
 
       if (match) {
