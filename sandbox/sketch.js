@@ -20,7 +20,7 @@ async function inputTest() {
   cmd.cout('\n  Enter text: ');
   cmd.setColor(0x7);
   const input = await cmd.getline();
-  cmd.cout('  ');
+  cmd.cout('\n  ');
   cmd.setColor(0x8F);
   cmd.cout(input);
 
@@ -28,7 +28,7 @@ async function inputTest() {
   cmd.cout('\n\n  Enter secret: ');
   cmd.setColor(0x7);
   const secret = await cmd.getline({ isPassword: true });
-  cmd.cout('  ');
+  cmd.cout('\n  ');
   cmd.setColor(0x8F);
   cmd.cout(secret);
 
@@ -36,15 +36,15 @@ async function inputTest() {
   cmd.cout('\n\n  Enter integer: ');
   cmd.setColor(0x7);
   const num = Number(await cmd.getline({ include: /[0-9]/ }))
-  cmd.cout('  ');
+  cmd.cout('\n  ');
   cmd.setColor(0x8F);
-  cmd.cout(num)
+  cmd.cout(`${num}`);
 
   cmd.setColor(0xE);
   cmd.cout('\n\n  Enter more text (no symbols): ');
   cmd.setColor(0x7);
   const text = await cmd.getline({ exclude: /[!@#$%^&*]/ });
-  cmd.cout('  ');
+  cmd.cout('\n  ');
   cmd.setColor(0x8F);
   cmd.cout(text);
 

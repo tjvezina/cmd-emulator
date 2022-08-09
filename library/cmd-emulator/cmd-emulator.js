@@ -373,7 +373,7 @@ class Cmd {
     let input = '';
     let key = await this.getch();
 
-    while ((key !== ENTER && key !== ESCAPE) || input.length == 0) {
+    while (key !== ENTER || input.length == 0) {
       if (key === BACKSPACE && input.length > 0) {
         removeChar();
       }
@@ -389,7 +389,6 @@ class Cmd {
       key = await this.getch();
     }
 
-    this.endl();
     return (isPassword ? input : input.trim());
   }
 
