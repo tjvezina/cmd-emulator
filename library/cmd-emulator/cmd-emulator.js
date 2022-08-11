@@ -172,11 +172,40 @@ class CmdEmulator {
   }
 }
 
+class ASCIIFontType {
+  static get Default() { return 'default'; }
+  static get Square() { return 'square'; }
+}
+
+class ASCIIFont {
+  fontMap;
+  colorMap;
+  charWidth;
+  charHeight;
+
+  constructor(fontMap) {
+    this.fontMap = fontMap;
+    this.charWidth = fontMap.width / 16;
+    this.charHeight = fontMap.height / 16;
+  }
+
+  init() {
+    const { fontMap } = this;
+
+    // tint() performance is so bad, it's better to save each color individually
+    this.colorMap = createGraphics(fontMap.width*4, fontMap.height*4);
+    COLOR_VALUES.forEach((col, i) => {
+      const x = (i % 4) * fontMap.width;
+      const y = floor(i / 4) * fontMap.height;
+      this.colorMap.tint(col);
+      this.colorMap.image(fontMap, x, y);
+    });
+  }
+}
+
 class Cmd {
-  static asciiFontMap;
-  static asciiFontColorMap;
-  static charWidth;
-  static charHeight;
+  static asciiFontSet = {};
+  static asciiFont;
   static frameParts = {};
 
   static {
@@ -184,11 +213,11 @@ class Cmd {
   }
 
   static preload() {
-    // Load the ascii font map, a 16x16 character font image
-    loadImage(`${CMD_ASSET_PATH}/ascii-font.png`, result => {
-      this.asciiFontMap = result;
-      this.charWidth = this.asciiFontMap.width/16;
-      this.charHeight = this.asciiFontMap.height/16;
+    loadImage(`${CMD_ASSET_PATH}/ascii-font-8x12.png`, result => {
+      this.asciiFontSet[ASCIIFontType.Default] = new ASCIIFont(result);
+    });
+    loadImage(`${CMD_ASSET_PATH}/ascii-font-8x8.png`, result => {
+      this.asciiFontSet[ASCIIFontType.Square] = new ASCIIFont(result);
     });
 
     const framePartNames = ['tl', 't', 'tr', 'l', 'r', 'bl', 'b', 'br'];
@@ -200,16 +229,9 @@ class Cmd {
   }
 
   static setup() {
-    const { asciiFontMap } = this;
+    Object.values(this.asciiFontSet).forEach(font => font.init());
 
-    // tint() performance is so bad, it's better to save each color individually
-    this.asciiFontColorMap = createGraphics(asciiFontMap.width*4, asciiFontMap.height*4);
-    COLOR_VALUES.forEach((col, i) => {
-      const x = (i % 4) * asciiFontMap.width;
-      const y = floor(i / 4) * asciiFontMap.height;
-      this.asciiFontColorMap.tint(col);
-      this.asciiFontColorMap.image(asciiFontMap, x, y);
-    });
+    this.asciiFont = this.asciiFontSet[ASCIIFontType.Default];
   }
 
   title = 'C:\\Windows\\system32\\cmd.exe';
@@ -298,6 +320,11 @@ class Cmd {
 
   keyPressed(event) {
     this.lastKeyEvent = event;
+  }
+
+  setFont(type) {
+    Cmd.asciiFont = Cmd.asciiFontSet[type];
+    this.resize(null, null, { force: true, animate: false });
   }
 
   setConsoleTitle(title) {
@@ -400,11 +427,25 @@ class Cmd {
     this.foreColor = colorCode % 16;
   }
 
+  setForeColor(col) {
+    this.foreColor = col;
+  }
+
+  setBackColor(col) {
+    this.backColor = col;
+  }
+
   // Redraws the console all in one color (equivalent to C++ stdlib system("color XX") function)
-  systemColor(colorCode) {
+  systemColor(...args) {
     const { contentBuffer, gridSize } = this;
 
-    [this.backColor, this.foreColor] = [...colorCode.padStart(2, '0')].map(i => parseInt(i, 16));
+    if (typeof args[0] === 'string') {
+      const colorCode = args[0];
+      [this.backColor, this.foreColor] = [...colorCode.padStart(2, '0')].map(i => parseInt(i, 16));
+    } else {
+      this.foreColor = args[0];
+      this.backColor = args[1];
+    }
 
     this.fillBackground();
 
@@ -471,7 +512,7 @@ class Cmd {
     }
 
     const { graphics, contentBuffer } = this;
-    const { asciiFontMap, asciiFontColorMap, charWidth, charHeight } = Cmd;
+    const { fontMap, colorMap, charWidth, charHeight } = Cmd.asciiFont;
 
     const dx = this.cursor.x*charWidth;
     const dy = this.cursor.y*charHeight;
@@ -479,13 +520,13 @@ class Cmd {
     graphics.fill(COLOR_VALUES[this.backColor]);
     graphics.rect(dx, dy, charWidth, charHeight);
 
-    const cx = (this.foreColor % 4) * asciiFontMap.width;
-    const cy = floor(this.foreColor / 4) * asciiFontMap.height;
+    const cx = (this.foreColor % 4) * fontMap.width;
+    const cy = floor(this.foreColor / 4) * fontMap.height;
 
-    const sx = (code % 16) * (asciiFontMap.width/16);
-    const sy = floor(code / 16) * (asciiFontMap.height/16);
+    const sx = (code % 16) * (fontMap.width/16);
+    const sy = floor(code / 16) * (fontMap.height/16);
 
-    graphics.image(asciiFontColorMap, dx, dy, charWidth, charHeight, sx+cx, sy+cy, charWidth, charHeight);
+    graphics.image(colorMap, dx, dy, charWidth, charHeight, sx+cx, sy+cy, charWidth, charHeight);
 
     contentBuffer[this.cursor.x + this.cursor.y*this.gridSize.width] = code;
 
@@ -500,7 +541,7 @@ class Cmd {
     if (height === 0) {
       await this.resize(null, DEFAULT_GRID_HEIGHT);
     } else {
-      await this.resize(null, (height - t.height - b.height) / Cmd.charHeight);
+      await this.resize(null, (height - t.height - b.height) / Cmd.asciiFont.charHeight);
     }
   }
 
@@ -515,7 +556,7 @@ class Cmd {
     const prevGridSize = this.gridSize;
 
     this.gridSize = { width: gridWidth, height: gridHeight };
-    const nextPixelSize = { width: gridWidth * Cmd.charWidth, height: gridHeight * Cmd.charHeight };
+    const nextPixelSize = { width: gridWidth * Cmd.asciiFont.charWidth, height: gridHeight * Cmd.asciiFont.charHeight };
 
     if (animate) {
       const { pixelSize } = this;
