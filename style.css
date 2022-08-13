@@ -10,4 +10,5 @@ main {
   justify-content: center;
   align-items: center;
   background-color: #222;
+  overflow: hidden;
 }
